@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ANIMA OBSCURA</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #030305;
+            --bg-panel: rgba(12, 10, 16, 0.93);
+            --crimson: #9e1b28;
+            --crimson-glow: rgba(158, 27, 40, 0.5);
+            --gold: #d4af37;
+            --gold-dim: #8c7223;
+            --void: #231c2b;
+            --text-main: #f0ede9;
+            --text-dim: #9693a8;
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 0%, #1c142a 0%, var(--bg-deep) 75%);
+            color: var(--text-main);
+            font-family: 'Cormorant Garamond', serif;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .header {
+            text-align: center;
+            padding: 16px 10px 10px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            background: linear-gradient(180deg, rgba(3,3,5,0.98) 0%, rgba(3,3,5,0) 100%);
+            z-index: 10;
+        }
+        .title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.3rem, 5.5vw, 1.8rem);
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px var(--crimson-glow);
+            font-weight: 900;
+        }
+        .runes {
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin: 5px 0;
+            opacity: 0.4;
+        }
+        .meta-info {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .meta-info span { color: var(--gold); font-weight: 700; }
+        .pet-name { font-size: 1.2rem; color: var(--text-main); margin-top: 4px; font-style: italic; font-weight: 600; letter-spacing: 1px; }
+        .age-info { font-size: 0.8rem; color: var(--text-dim); margin-top: 1px; }
+
+        /* --- Main Stage (SVG Pet) --- */
+        .stage {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 180px;
+        }
+
+        .pet-container {
+            width: clamp(150px, 45vw, 210px);
+            height: clamp(150px, 45vw, 210px);
+            position: relative;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wisp-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 25px var(--crimson-glow));
+            animation: float 5s ease-in-out infinite;
+            transition: filter 1s ease;
+        }
+
+        .wisp-body {
+            fill: url(#wispGrad);
+            transition: all 1s ease;
+        }
+        .wisp-core {
+            fill: url(#coreGrad);
+            opacity: 0.7;
+            animation: pulse-core 2.5s ease-in-out infinite;
+        }
+        .eye {
+            fill: var(--crimson);
+            filter: drop-shadow(0 0 8px var(--crimson));
+            animation: blink 4s infinite;
+            transform-origin: center;
+            transition: transform 0.5s ease, fill 0.5s ease;
+        }
+
+        /* Настройка визуальных состояний питомца */
+        .pet-container.sad .wisp-svg { animation: float 6s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(158, 27, 40, 0.2)) grayscale(0.7) brightness(0.6); }
+        .pet-container.sad .eye { transform: scaleY(0.3); animation: none; }
+        
+        .pet-container.sleeping .wisp-svg { animation: breathe 4s ease-in-out infinite; filter: drop-shadow(0 0 5px rgba(40, 30, 60, 0.5)) brightness(0.35); }
+        .pet-container.sleeping .eye { transform: scaleY(0.05); animation: none; fill: #443344; }
+
+        .pet-container.dead .wisp-svg { animation: none; filter: grayscale(1) brightness(0.2) drop-shadow(none); }
+        .pet-container.dead .eye { fill: #222; filter: none; transform: rotate(45deg) scaleY(1); animation: none; }
+        .pet-container.dead .eye:last-child { transform: rotate(-45deg) scaleY(1); }
+
+        /* --- Resources --- */
+        .resources {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 15px;
+            background: var(--bg-panel);
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .res-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 1.1rem; 
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .res-icon { font-size: 1.2rem; }
+
+        /* --- Stats --- */
+        .stats-panel {
+            padding: 14px 24px;
+            background: rgba(8, 8, 12, 0.75);
+        }
+        .stat-row {
+            display: grid;
+            grid-template-columns: 75px 1fr 35px;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+        .stat-row:last-child { margin-bottom: 0; }
+        .stat-label { 
+            font-size: 0.9rem; 
+            color: var(--gold-dim); 
+            text-align: right; 
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+        .stat-val { 
+            font-size: 0.9rem; 
+            color: var(--text-dim); 
+            text-align: left; 
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+        }
+        
+        .stat-bar-bg {
+            height: 10px;
+            background: #020204;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.8);
+        }
+        .stat-bar-fill {
+            height: 100%;
+            width: 100%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+        }
+        .fill-life { background: linear-gradient(90deg, #6b121a, var(--crimson)); box-shadow: 0 0 10px var(--crimson-glow); }
+        .fill-satiation { background: linear-gradient(90deg, #7c6623, var(--gold)); }
+        .fill-spirit { background: linear-gradient(90deg, #321463, #7a5285); }
+        .fill-darkness { background: linear-gradient(90deg, #161221, #453754); }
+        
+        .stat-bar-fill.low { background: #555; box-shadow: none; }
+        .stat-bar-fill.crit { background: #d91414; animation: pulse-red 1s infinite; }
+
+        /* --- Actions --- */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 14px 16px calc(14px + var(--safe-bottom));
+            background: var(--bg-panel);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(212, 175, 55, 0.05);
+        }
+        .btn {
+            background: linear-gradient(180deg, rgba(35, 31, 46, 0.95) 0%, rgba(18, 16, 24, 0.95) 100%);
+            border: 1px solid var(--gold-dim);
+            color: var(--gold);
+            padding: 12px 8px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 2.8vw, 0.95rem);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .btn:active:not(:disabled) { transform: scale(0.96); background: var(--crimson); color: #fff; border-color: #ff3344; box-shadow: 0 0 12px var(--crimson-glow); }
+        .btn:disabled { opacity: 0.25; cursor: not-allowed; filter: grayscale(0.8); transform: none !important; box-shadow: none; }
+        .btn-cost { 
+            font-size: 0.75rem; 
+            color: var(--text-dim); 
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+        }
+        .btn-shop { border-color: var(--crimson); color: #e63946; }
+        .btn-shop:active:not(:disabled) { background: var(--gold); color: #000; border-color: var(--gold); }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 3, 5, 0.97);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-title { 
+            font-family: 'Cinzel', serif; 
+            font-size: 1.8rem; 
+            color: var(--crimson); 
+            margin-bottom: 8px; 
+            text-shadow: 0 0 20px var(--crimson-glow);
+            letter-spacing: 2px;
+        }
+        .modal-text { color: var(--text-dim); margin-bottom: 25px; line-height: 1.5; font-size: 1.05rem; }
+        
+        .shop-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 330px;
+            margin-bottom: 24px;
+        }
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(28, 20, 38, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            padding: 12px 14px;
+            border-radius: 8px;
+            gap: 10px;
+        }
+        .shop-item-vertical {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+        .shop-info { text-align: left; }
+        .shop-name { color: var(--gold); font-weight: 700; display: block; font-family: 'Cinzel', serif; font-size: 0.95rem; letter-spacing: 0.5px;}
+        .shop-desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; display: block; }
+        .shop-btn {
+            background: transparent;
+            border: 1px solid var(--gold-dim);
+            color: var(--gold);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .shop-btn:active:not(:disabled) { background: var(--gold); color: #000; }
+        .shop-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Стилизация нового текстового инпута для переименования */
+        .rename-container {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .shop-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--void);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .shop-input:focus { border-color: var(--gold-dim); }
+
+        .close-btn {
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--text-dim);
+            padding: 12px 36px;
+            border-radius: 6px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .close-btn:active { background: rgba(255,255,255,0.08); color: #fff; border-color: #fff; }
+
+        /* Log Toast */
+        .log-toast {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(158, 27, 40, 0.96);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            font-family: 'Cinzel', serif;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 50;
+            text-align: center;
+            width: 85%;
+            max-width: 310px;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        }
+        .log-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes breathe { 0%, 100% { transform: scale(1) translateY(0px); } 50% { transform: scale(1.04) translateY(3px); } }
+        @keyframes pulse-core { 0%, 100% { opacity: 0.4; transform: scale(1.15) center; } 50% { opacity: 0.85; transform: scale(1.25) center; } }
+        @keyframes blink { 0%, 48%, 52%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.08); } }
+        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title">ANIMA OBSCURA</h1>
+        <div class="runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+        <div class="meta-info">
+            <span id="day">День 1</span> · <span id="time">Рассвет 00:00</span>
+        </div>
+        <div class="meta-info">
+            <span id="stage-name">Личинка Ур. I</span>
+        </div>
+        <div class="pet-name" id="pet-name">Безымянный</div>
+        <div class="age-info">Возраст: <span id="age">0</span> дней</div>
+        <div class="runes" style="transform: scaleX(-1); margin-top: 4px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+    </div>
+
+    <div class="stage">
+        <div class="pet-container stage-1" id="pet">
+            <svg viewBox="0 0 200 200" class="wisp-svg">
+                <defs>
+                    <radialGradient id="wispGrad" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="#564560"/>
+                        <stop offset="100%" stop-color="#0c0a12"/>
+                    </radialGradient>
+                    <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#9e1b28" stop-opacity="0.95"/>
+                        <stop offset="100%" stop-color="#9e1b28" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <path d="M100,40 C130,40 150,70 150,110 C150,150 125,175 100,175 C75,175 50,150 50,110 C50,70 70,40 100,40 Z" fill="url(#coreGrad)" class="wisp-core" style="transform-origin: center; transform: scale(1.2);"/>
+                <path d="M100,30 C140,30 160,70 160,110 C160,150 130,180 100,180 C70,180 40,150 40,110 C40,70 60,30 100,30 Z" fill="url(#wispGrad)" class="wisp-body"/>
+                <g class="wisp-eyes">
+                    <ellipse class="eye" cx="80" cy="90" rx="7" ry="12"/>
+                    <ellipse class="eye" cx="120" cy="90" rx="7" ry="12"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <div class="resources">
+        <div class="res-item"><span class="res-icon">💀</span> <span id="res-souls">10</span></div>
+        <div class="res-item"><span class="res-icon">🕯️</span> <span id="res-candles">5</span></div>
+        <div class="res-item"><span class="res-icon">⚗️</span> <span id="res-elixirs">2</span></div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-row">
+            <div class="stat-label">Жизнь</div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill fill-life" id="bar-life"></div></div>
+            <div class="stat-val" id="val-life">100</div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-label">Насыщ.</div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill fill-satiation" id="bar-satiation"></div></div>
+            <div class="stat-val" id="val-satiation">100</div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-label">Дух</div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill fill-spirit" id="bar-spirit"></div></div>
+            <div class="stat-val" id="val-spirit">100</div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-label">Тьма</div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill fill-darkness" id="bar-darkness"></div></div>
+            <div class="stat-val" id="val-darkness">50</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn" id="btn-feed" onclick="actionFeed()">
+            <span>🍖 Кормить</span>
+            <span class="btn-cost">2 💀</span>
+        </button>
+        <button class="btn" id="btn-ritual" onclick="actionRitual()">
+            <span>🕯️ Ритуал</span>
+            <span class="btn-cost">1 🕯️</span>
+        </button>
+        <button class="btn" id="btn-darkness" onclick="actionDarkness()">
+            <span>🌑 Тьма</span>
+            <span class="btn-cost">1 🕯️</span>
+        </button>
+        <button class="btn" id="btn-heal" onclick="actionHeal()">
+            <span>⚗️ Исцелить</span>
+            <span class="btn-cost">1 ⚗️</span>
+        </button>
+        <button class="btn btn-shop" id="btn-shop" onclick="openShop()">
+            <span>👜 Лавка</span>
+            <span class="btn-cost">Товары</span>
+        </button>
+        <button class="btn" id="btn-work" onclick="actionWork()">
+            <span>⚰️ Медитация</span>
+            <span class="btn-cost" id="work-cost">+3 Свечи (5с)</span>
+        </button>
+    </div>
+
+    <div class="log-toast" id="log">Бездна шепчет...</div>
+
+    <div class="modal-overlay" id="shopModal">
+        <div class="modal-title">Лавка Теней</div>
+        <div class="modal-text">Обменяйте души на материальные блага</div>
+        <div class="shop-grid">
+            <div class="shop-item">
+                <div class="shop-info">
+                    <span class="shop-name">Восковая свеча</span>
+                    <span class="shop-desc">+5 🕯️ Свечей</span>
+                </div>
+                <button class="shop-btn" onclick="buyItem('candles', 1, 5)">1 💀</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-info">
+                    <span class="shop-name">Эликсир крови</span>
+                    <span class="shop-desc">+1 ⚗️ Эликсир</span>
+                </div>
+                <button class="shop-btn" onclick="buyItem('elixirs', 2, 1)">2 💀</button>
+            </div>
+            <div class="shop-item shop-item-vertical">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div class="shop-info">
+                        <span class="shop-name">Дать новое имя</span>
+                        <span class="shop-desc">Изменить сущность за 3 💀</span>
+                    </div>
+                </div>
+                <div class="rename-container">
+                    <input type="text" id="rename-input" class="shop-input" placeholder="Введите имя..." maxlength="15">
+                    <button class="shop-btn" onclick="renamePet()">Ок</button>
+                </div>
+            </div>
+        </div>
+        <button class="close-btn" onclick="closeShop()">Закрыть врата</button>
+    </div>
+
+    <div class="modal-overlay" id="gameOverModal">
+        <div class="modal-title">ANIMA PERIT</div>
+        <div class="modal-text">Душа рассеялась во тьме.<br>Она просуществовала <span id="final-days" style="color:var(--gold); font-weight:bold;">0</span> дней.</div>
+        <button class="btn" onclick="resetGame()" style="width: 200px; border-color: var(--crimson); color: var(--crimson); margin-top: 10px;">
+            <span>✦ Возрождение</span>
+        </button>
+    </div>
+
+    <script>
+        // --- Telegram Init ---
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#030305');
+        tg.setBackgroundColor('#030305');
+
+        // --- Game State ---
+        const MAX_STAT = 100;
+        let state = {
+            life: 100,
+            satiation: 100,
+            spirit: 100,
+            darkness: 50,
+            souls: 10,
+            candles: 5,
+            elixirs: 2,
+            ageDays: 0,
+            stage: 1,
+            petName: "Безымянный",
+            isDead: false,
+            isWorking: false, // Новое состояние защиты от спама медитации
+            lastSave: Date.now()
+        };
+
+        let gameLoopId = null;
+        const TICK_RATE = 5000; // 5 seconds
+
+        // --- Core Logic ---
+        function init() {
+            loadGame();
+            calculateOffline();
+            updateUI();
+            if (gameLoopId) clearInterval(gameLoopId);
+            gameLoopId = setInterval(gameLoop, TICK_RATE);
+            showLog("Ритуал призыва завершен.");
+        }
+
+        function gameLoop() {
+            if (state.isDead) return;
+
+            state.satiation = Math.max(0, state.satiation - 2);
+            state.spirit = Math.max(0, state.spirit - 1);
+            state.darkness = Math.min(MAX_STAT, state.darkness + 0.5);
+            
+            if (state.darkness > 75) {
+                state.life = Math.max(0, state.life - 3);
+            }
+            if (state.satiation === 0 || state.spirit === 0) {
+                state.life = Math.max(0, state.life - 5);
+            }
+
+            state.ageDays += 0.01; 
+            checkEvolution();
+            checkDeath();
+            saveGame();
+            updateUI();
+        }
+
+        function checkEvolution() {
+            let newStage = state.stage;
+            if (state.ageDays >= 3 && state.darkness > 40) newStage = 2;
+            if (state.ageDays >= 7 && state.darkness > 65) newStage = 3;
+            if (state.ageDays >= 14 && state.darkness > 85) newStage = 4;
+
+            if (newStage > state.stage) {
+                state.stage = newStage;
+                showLog(`Эволюция: Форма изменена!`);
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        function checkDeath() {
+            if (state.life <= 0) {
+                state.isDead = true;
+                state.life = 0;
+                state.isWorking = false;
+                if (gameLoopId) clearInterval(gameLoopId);
+                updateUI();
+                document.getElementById('final-days').innerText = Math.floor(state.ageDays);
+                document.getElementById('gameOverModal').classList.add('active');
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        // --- Actions ---
+        function actionFeed() {
+            if (state.isDead) return;
+            if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); tg.HapticFeedback.notificationOccurred('error'); return; }
+            
+            state.souls -= 2;
+            state.satiation = Math.min(MAX_STAT, state.satiation + 35);
+            state.life = Math.min(MAX_STAT, state.life + 5);
+            state.darkness = Math.max(0, state.darkness - 5);
+            showLog("Плоть поглощена.");
+            tg.HapticFeedback.impactOccurred('light');
+            updateUI();
+        }
+
+        function actionRitual() {
+            if (state.isDead) return;
+            if (state.candles < 1) { showLog("Нечем разжечь огонь! (Нужна 1 🕯️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (state.satiation < 10) { showLog("Питомец слишком голоден."); return; }
+
+            state.candles -= 1;
+            state.satiation = Math.max(0, state.satiation - 10);
+            state.spirit = Math.min(MAX_STAT, state.spirit + 20);
+            state.darkness = Math.min(MAX_STAT, state.darkness + 8);
+            
+            if (Math.random() < (state.darkness > 60 ? 0.5 : 0.25)) {
+                state.souls += 1;
+                showLog("Ритуал удался! Обретена душа.");
+                tg.HapticFeedback.impactOccurred('heavy');
+            } else {
+                showLog("Тьма поглотила шепот...");
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+            updateUI();
+        }
+
+        function actionDarkness() {
+            if (state.isDead) return;
+            if (state.candles < 1) { showLog("Нужна 1 🕯️ для погружения во тьму."); tg.HapticFeedback.notificationOccurred('error'); return; }
+            
+            state.candles -= 1;
+            state.spirit = Math.min(MAX_STAT, state.spirit + 30);
+            state.darkness = Math.min(MAX_STAT, state.darkness + 15);
+            showLog("Дух крепнет, но тьма сгущается.");
+            tg.HapticFeedback.impactOccurred('medium');
+            updateUI();
+        }
+
+        function actionHeal() {
+            if (state.isDead) return;
+            if (state.elixirs < 1) { showLog("Нет эликсиров! (Нужен 1 ⚗️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (state.life >= MAX_STAT) { showLog("Питомец полностью здоров."); return; }
+            
+            state.elixirs -= 1;
+            state.life = Math.min(MAX_STAT, state.life + 40);
+            state.darkness = Math.max(0, state.darkness - 10);
+            showLog("Раны затягиваются.");
+            tg.HapticFeedback.impactOccurred('heavy');
+            updateUI();
+        }
+
+        // Фикс защиты от спама (Абуз медитации устранен)
+        function actionWork() {
+            if (state.isDead || state.isWorking) return;
+            
+            state.isWorking = true;
+            showLog("Медитация... Врата заперты.");
+            tg.HapticFeedback.impactOccurred('light');
+            updateUI();
+            
+            setTimeout(() => {
+                if (!state.isDead) {
+                    state.candles += 3;
+                    showLog("Медитация завершена. +3 🕯️");
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+                state.isWorking = false;
+                updateUI();
+            }, 5000);
+        }
+
+        // --- Shop System ---
+        function openShop() {
+            if (state.isDead) return;
+            document.getElementById('shopModal').classList.add('active');
+        }
+
+        function closeShop() {
+            document.getElementById('shopModal').classList.remove('remove');
+            document.getElementById('shopModal').classList.remove('active');
+        }
+
+        function buyItem(resource, cost, amount) {
+            if (state.isDead) return;
+            if (state.souls < cost) {
+                showLog(`Недостаточно душ! Нужно ${cost} 💀`);
+                tg.HapticFeedback.notificationOccurred('error');
+                return;
+            }
+
+            state.souls -= cost;
+            state[resource] += amount;
+            
+            const names = { 'candles': 'Свечи', 'elixirs': 'Эликсир' };
+            showLog(`Приобретено: ${amount} ${names[resource]}`);
+            tg.HapticFeedback.notificationOccurred('success');
+            
+            updateUI();
+        }
+
+        // Новая функция переименования без prompt()
+        function renamePet() {
+            if (state.isDead) return;
+            if (state.souls < 3) {
+                showLog("Недостаточно душ! Нужно 3 💀");
+                tg.HapticFeedback.notificationOccurred('error');
+                return;
+            }
+            
+            const inputField = document.getElementById('rename-input');
+            const newName = inputField.value;
+            
+            if (newName && newName.trim() !== "") {
+                state.souls -= 3;
+                state.petName = newName.trim().substring(0, 15);
+                showLog(`Теперь его зовут: ${state.petName}`);
+                inputField.value = ""; 
+                tg.HapticFeedback.notificationOccurred('success');
+                closeShop();
+                updateUI();
+            } else {
+                showLog("Введите корректное имя!");
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        function resetGame() {
+            state = {
+                life: 100, satiation: 100, spirit: 100, darkness: 50,
+                souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
+                petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now()
+            };
+            document.getElementById('gameOverModal').classList.remove('active');
+            if (gameLoopId) clearInterval(gameLoopId);
+            gameLoopId = setInterval(gameLoop, TICK_RATE);
+            saveGame();
+            updateUI();
+            showLog("Новая душа призвана.");
+        }
+
+        // --- UI Update (Strict Sync) ---
+        function updateUI() {
+            // Bars
+            setBar('bar-life', state.life, 'val-life');
+            setBar('bar-satiation', state.satiation, 'val-satiation');
+            setBar('bar-spirit', state.spirit, 'val-spirit');
+            setBar('bar-darkness', state.darkness, 'val-darkness');
+
+            // Text
+            document.getElementById('res-souls').innerText = state.souls;
+            document.getElementById('res-candles').innerText = state.candles;
+            document.getElementById('res-elixirs').innerText = state.elixirs;
+            document.getElementById('day').innerText = `День ${Math.floor(state.ageDays) + 1}`;
+            document.getElementById('age').innerText = Math.floor(state.ageDays);
+            document.getElementById('pet-name').innerText = state.petName;
+
+            const times = ["Рассвет 00:00", "Утро 06:00", "Полдень 12:00", "Закат 18:00", "Ночь 00:00"];
+            const timeIdx = Math.floor((state.ageDays * 24) / (24/5)) % 5;
+            document.getElementById('time').innerText = times[timeIdx];
+
+            const names = ["Личинка Ур. I", "Блуждающий Дух", "Теневой Фантом", "Повелитель Бездны"];
+            document.getElementById('stage-name').innerText = names[state.stage - 1] || "Неизвестно";
+
+            // Pet Visuals (Фикс интеграции сна)
+            const pet = document.getElementById('pet');
+            pet.className = 'pet-container';
+            pet.classList.add(`stage-${state.stage}`);
+            
+            if (state.isDead) {
+                pet.classList.add('dead');
+            } else if (timeIdx === 4) { 
+                pet.classList.add('sleeping'); // Питомец теперь корректно засыпает ночью
+            } else if (state.life < 40 || state.satiation < 30 || state.spirit < 30) {
+                pet.classList.add('sad');
+            }
+
+            // Button States & Медитация текст
+            const btns = document.querySelectorAll('.actions .btn');
+            btns.forEach(btn => btn.disabled = state.isDead);
+            
+            const workBtn = document.getElementById('btn-work');
+            const workCost = document.getElementById('work-cost');
+            if (state.isWorking) {
+                workBtn.disabled = true;
+                workCost.innerText = "Медитирует...";
+            } else {
+                workCost.innerText = "+3 Свечи (5с)";
+            }
+        }
+
+        function setBar(barId, value, textId) {
+            const bar = document.getElementById(barId);
+            const text = document.getElementById(textId);
+            bar.style.width = value + '%';
+            text.innerText = Math.floor(value);
+            
+            bar.className = 'stat-bar-fill'; 
+            if (barId === 'bar-life') bar.classList.add('fill-life');
+            if (barId === 'bar-satiation') bar.classList.add('fill-satiation');
+            if (barId === 'bar-spirit') bar.classList.add('fill-spirit');
+            if (barId === 'bar-darkness') bar.classList.add('fill-darkness');
+            
+            if (value < 30 && barId !== 'bar-darkness') bar.classList.add('low');
+            if (value < 15 && barId !== 'bar-darkness') bar.classList.add('crit');
+        }
+
+        let logTimeout;
+        function showLog(text) {
+            const log = document.getElementById('log');
+            log.innerText = text;
+            log.classList.add('show');
+            clearTimeout(logTimeout);
+            logTimeout = setTimeout(() => log.classList.remove('show'), 2500);
+        }
+
+        // --- Save/Load System ---
+        function saveGame() {
+            state.lastSave = Date.now();
+            try {
+                localStorage.setItem('animaObscuraFinal', JSON.stringify(state));
+            } catch (e) { console.warn("Save failed"); }
+        }
+
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('animaObscuraFinal');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                    state.isWorking = false; // Защита от зависания статуса при перезапуске
+                }
+            } catch (e) { console.warn("Load failed"); }
+        }
+
+        function calculateOffline() {
+            if (state.isDead) return;
+            const now = Date.now();
+            const diffSeconds = (now - state.lastSave) / 1000;
+            
+            if (diffSeconds > 10) {
+                const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
+                if (ticks > 0) {
+                    const simulatedTicks = Math.min(ticks, 300); // Ограничение ~25 мин офлайна
+                    for (let i = 0; i < simulatedTicks; i++) {
+                        state.satiation = Math.max(0, state.satiation - 2);
+                        state.spirit = Math.max(0, state.spirit - 1);
+                        state.darkness = Math.min(MAX_STAT, state.darkness + 0.5);
+                        
+                        if (state.darkness > 75) state.life = Math.max(0, state.life - 3);
+                        if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 5);
+                        state.ageDays += 0.01;
+                    }
+                    checkEvolution();
+                    checkDeath();
+                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. в бездне.`);
+                }
+            }
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
