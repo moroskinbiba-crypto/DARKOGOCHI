@@ -402,9 +402,8 @@
         }
         .game-target {
             position: absolute;
-            left: 42%;
-            width: 16%;
-            height: 100%;
+            left: 40%;
+            width: 20%;
             background: rgba(158, 27, 40, 0.45);
             border-left: 1px dashed var(--crimson);
             border-right: 1px dashed var(--crimson);
@@ -468,7 +467,7 @@
         <div>
             <button class="rules-trigger-btn" onclick="openRules()">📜 Свод Правил</button>
         </div>
-        <div class="runes" style="transform: scaleX(-1); margin-top: 4px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+        <div class="runes" style="transform: scaleX(-1); margin-top: 4px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ  ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
     </div>
 
     <div class="stage">
@@ -565,9 +564,9 @@
                 <div class="rules-subtitle">2. Жизненные Атрибуты</div>
                 <ul>
                     <li><strong>Жизнь:</strong> Падает, если существо голодает, теряет дух или когда Тьма становится слишком давящей.</li>
-                    <li><strong>Насыщение:</strong> Падает автономно (-2 каждые 5 сек). При 0 начинает отнимать Жизнь. Восстанавливается едой.</li>
-                    <li><strong>Дух:</strong> Угасает со временем (-1 каждые 5 сек). При 0 наносит критический урон Жизни. Восстанавливается Ритуалами.</li>
-                    <li><strong>Тьма:</strong> Стабильно растет (+0.5 каждые 5 сек). Если превысит 75%, начинает душить существо (-3 Жизни за тик). Однако высокая Тьма необходима для эволюции.</li>
+                    <li><strong>Насыщение:</strong> Падает автономно (-0.4 каждую минуту). Полной шкалы хватает примерно на 4 часа. При 0 начинает отнимать Жизнь.</li>
+                    <li><strong>Дух:</strong> Угасает со временем (-0.2 каждую минуту). Запас прочности составляет около 8 часов. При 0 наносит критический урон Жизни.</li>
+                    <li><strong>Тьма:</strong> Стабильно растет (+0.1 каждую минуту). Если превысит 75%, начинает плавно душить существо (-0.5 Жизни за тик). Однако высокая Тьма необходима для эволюции.</li>
                 </ul>
             </div>
             <div class="rules-section">
@@ -582,7 +581,7 @@
                 <div class="rules-subtitle">4. Таинства действий и Мини-игра</div>
                 <ul>
                     <li><strong>Ритуал:</strong> Расходует Свечу и Насыщение, давая Дух и Тьму. Дает шанс призвать Душу 💀. Чем гуще Тьма питомца, тем выше шанс привлечь Душу.</li>
-                    <li><strong>Резонанс Бездны:</strong> Активная мини-игра. Поймайте бегущую стрелку точно по центру шкалы в багровой зоне. Успех принесет вам сразу +4 Свечи и 50% шанс выбить Душу (💀) абсолютно бесплатно! Промах даст лишь 1 свечу и отнимет 5 Насыщения.</li>
+                    <li><strong>Резонанс Бездны:</strong> Активная мини-игра. Поймайте бегущую стрелку точно по центру шкалы в багровой зоне (от 40% до 60%). Успех принесет вам сразу +4 Свечи и 50% шанс выбить Душу (💀) абсолютно бесплатно! Промах даст лишь 1 свечу и отнимет 5 Насыщения.</li>
                 </ul>
             </div>
             <div class="rules-section">
@@ -596,7 +595,7 @@
             </div>
             <div class="rules-section">
                 <div class="rules-subtitle">6. Автономность Времени</div>
-                <p>Бездна не спит. Пока вы отсутствуете, игра рассчитывает симуляцию в офлайн-режиме (до 25 минут). Заботьтесь о сытости и стабильности Анимы перед выходом из приложения.</p>
+                <p>Бездна не спит. Пока вы отсутствуете, игра рассчитывает симуляцию в офлайн-режиме (до 24 часов). Заботьтесь о сытости и стабильности Анимы перед выходом из приложения.</p>
             </div>
         </div>
         <button class="close-btn" onclick="closeRules()">Вернуться к призыву</button>
@@ -660,7 +659,7 @@
     </div>
 
     <script>
-     // --- Telegram Init (Safe Mode) ---
+       // --- Telegram Init (Safe Mode) ---
         let tg = null;
         try {
             if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
@@ -689,7 +688,6 @@
                 }
             }
         }
-
         // --- Game State ---
         const MAX_STAT = 100;
         let state = {
@@ -712,7 +710,9 @@
         let miniGameInterval = null;
         let pointerPos = 0;
         let pointerDir = 1;
-        const TICK_RATE = 5000; 
+        
+        // НОВЫЙ ТЕМП: 1 тик = 60000 мс (1 минута) вместо 5 секунд.
+        const TICK_RATE = 60000; 
 
         // --- Core Logic ---
         function init() {
@@ -721,24 +721,25 @@
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = setInterval(gameLoop, TICK_RATE);
-            showLog("Призыв Traumagochi завершен.");
+            showLog("Призыв Травмагочи завершен.");
         }
 
         function gameLoop() {
             if (state.isDead) return;
 
-            state.satiation = Math.max(0, state.satiation - 2);
-            state.spirit = Math.max(0, state.spirit - 1);
-            state.darkness = Math.min(MAX_STAT, state.darkness + 0.5);
+            // Сбалансированный расход на 1 минуту игрового времени
+            state.satiation = Math.max(0, state.satiation - 0.4); // ~4 часа до нуля
+            state.spirit = Math.max(0, state.spirit - 0.2);      // ~8 часов до нуля
+            state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
             
             if (state.darkness > 75) {
-                state.life = Math.max(0, state.life - 3);
+                state.life = Math.max(0, state.life - 0.5);
             }
             if (state.satiation === 0 || state.spirit === 0) {
-                state.life = Math.max(0, state.life - 5);
+                state.life = Math.max(0, state.life - 1);
             }
 
-            state.ageDays += 0.01; 
+            state.ageDays += 0.005; // 1 игровой день наступает примерно за 3.3 реальных часа (200 тиков)
             checkEvolution();
             checkDeath();
             saveGame();
@@ -833,7 +834,7 @@
             updateUI();
         }
 
-        // --- Active Mini-Game System ---
+        // --- Active Mini-Game System (60 FPS & Smooth Movement) ---
         function startMiniGame() {
             if (state.isDead || state.isWorking) return;
             
@@ -845,13 +846,12 @@
             document.getElementById('miniGameModal').classList.add('active');
             safeHaptic('impact', 'light');
 
-            // Скорость бега указателя (каждые 20мс)
             miniGameInterval = setInterval(() => {
-                pointerPos += pointerDir * 4.5;
-                if (pointerPos >= 98) { pointerPos = 98; pointerDir = -1; }
+                pointerPos += pointerDir * 2; 
+                if (pointerPos >= 100) { pointerPos = 100; pointerDir = -1; }
                 if (pointerPos <= 0) { pointerPos = 0; pointerDir = 1; }
                 document.getElementById('mg-pointer').style.left = pointerPos + '%';
-            }, 20);
+            }, 16);
         }
 
         function catchResonance() {
@@ -860,22 +860,22 @@
             document.getElementById('miniGameModal').classList.remove('active');
             state.isWorking = false;
 
-            // Центральная багровая зона — от 42% до 58% шкалы
-            if (pointerPos >= 42 && pointerPos <= 58) {
+            const roundedPos = Math.round(pointerPos);
+
+            if (pointerPos >= 40 && pointerPos <= 60) {
                 state.candles += 4;
-                let bonusSoul = Math.random() < 0.5; // 50% шанс выбить череп
+                let bonusSoul = Math.random() < 0.5; 
                 if (bonusSoul) {
                     state.souls += 1;
-                    showLog("Идеальный резонанс! +4 🕯️ и +1 💀");
+                    showLog(`Резонанс (${roundedPos}%)! +4 🕯️ и +1 💀`);
                 } else {
-                    showLog("Резонанс пойман! Получено +4 🕯️");
+                    showLog(`Резонанс (${roundedPos}%)! Получено +4 🕯️`);
                 }
                 safeHaptic('notification', 'success');
             } else {
-                // Промах
                 state.candles += 1;
                 state.satiation = Math.max(0, state.satiation - 5);
-                showLog("Промах... Энергия рассеялась. +1 🕯️, -5 Насыщ.");
+                showLog(`Промах (${roundedPos}%). Надо от 40% до 60%. -5 Насыщ.`);
                 safeHaptic('notification', 'warning');
             }
 
@@ -889,10 +889,6 @@
             document.getElementById('shopModal').classList.add('active');
         }
 
-        function closeShop() {
-            document.getElementById('shopModal').classList.remove('active');
-        }
-
         // --- Rules Handlers ---
         function openRules() {
             document.getElementById('rulesModal').classList.add('active');
@@ -900,6 +896,10 @@
 
         function closeRules() {
             document.getElementById('rulesModal').classList.remove('active');
+        }
+
+        function closeShop() {
+            document.getElementById('shopModal').classList.remove('active');
         }
 
         function buyItem(resource, cost, amount) {
@@ -966,9 +966,9 @@
             setBar('bar-spirit', state.spirit, 'val-spirit');
             setBar('bar-darkness', state.darkness, 'val-darkness');
 
-            document.getElementById('res-souls').innerText = state.souls;
-            document.getElementById('res-candles').innerText = state.candles;
-            document.getElementById('res-elixirs').innerText = state.elixirs;
+            document.getElementById('res-souls').innerText = Math.floor(state.souls);
+            document.getElementById('res-candles').innerText = Math.floor(state.candles);
+            document.getElementById('res-elixirs').innerText = Math.floor(state.elixirs);
             document.getElementById('day').innerText = `День ${Math.floor(state.ageDays) + 1}`;
             document.getElementById('age').innerText = Math.floor(state.ageDays);
             document.getElementById('pet-name').innerText = state.petName;
@@ -1059,19 +1059,19 @@
             if (diffSeconds > 10) {
                 const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
                 if (ticks > 0) {
-                    const simulatedTicks = Math.min(ticks, 300); // кап на ~25 мин офлайна
+                    const simulatedTicks = Math.min(ticks, 1440); // Расчет оффлайна увеличен до 24 часов (1440 минут)
                     for (let i = 0; i < simulatedTicks; i++) {
                         if (state.life <= 0) {
                             state.isDead = true;
                             break;
                         }
-                        state.satiation = Math.max(0, state.satiation - 2);
-                        state.spirit = Math.max(0, state.spirit - 1);
-                        state.darkness = Math.min(MAX_STAT, state.darkness + 0.5);
+                        state.satiation = Math.max(0, state.satiation - 0.4);
+                        state.spirit = Math.max(0, state.spirit - 0.2);
+                        state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
                         
-                        if (state.darkness > 75) state.life = Math.max(0, state.life - 3);
-                        if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 5);
-                        state.ageDays += 0.01;
+                        if (state.darkness > 75) state.life = Math.max(0, state.life - 0.5);
+                        if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 1);
+                        state.ageDays += 0.005;
                     }
                     checkEvolution();
                     checkDeath();
