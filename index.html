@@ -102,7 +102,8 @@
             width: clamp(150px, 45vw, 210px);
             height: clamp(150px, 45vw, 210px);
             position: relative;
-            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
         }
 
         .wisp-svg {
@@ -143,6 +144,43 @@
         .pet-container.dead .wisp-svg { animation: none; filter: grayscale(1) brightness(0.2) drop-shadow(none); }
         .pet-container.dead .eye { fill: #222; filter: none; transform: rotate(45deg) scaleY(1); animation: none; }
         .pet-container.dead .eye:last-child { transform: rotate(-45deg) scaleY(1); }
+
+        /* --- 5 Random Interactive Tap Animations --- */
+        .anim-glow { animation: tapGlow 0.5s ease-out; }
+        .anim-shiver { animation: tapShiver 0.4s linear; }
+        .anim-squish { animation: tapSquish 0.5s ease-in-out; }
+        .anim-glitch { animation: tapGlitch 0.3s linear; }
+        .anim-flare { animation: tapFlare 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+
+        @keyframes tapGlow {
+            0%, 100% { filter: drop-shadow(0 0 25px var(--crimson-glow)); }
+            50% { filter: drop-shadow(0 0 50px #ff3344) brightness(1.6); }
+        }
+        @keyframes tapShiver {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            20% { transform: scale(1.08) rotate(-6deg); }
+            40% { transform: scale(0.95) rotate(6deg); }
+            60% { transform: scale(1.05) rotate(-4deg); }
+            80% { transform: scale(0.98) rotate(3deg); }
+        }
+        @keyframes tapSquish {
+            0%, 100% { transform: scale(1, 1); }
+            30% { transform: scale(1.25, 0.75); }
+            60% { transform: scale(0.82, 1.2); }
+            80% { transform: scale(1.08, 0.95); }
+        }
+        @keyframes tapGlitch {
+            0%, 100% { transform: translate(0, 0); filter: hue-rotate(0deg) contrast(1); }
+            20% { transform: translate(-6px, 4px); filter: hue-rotate(90deg) brightness(1.4) contrast(1.3); }
+            40% { transform: translate(5px, -3px); filter: hue-rotate(180deg) brightness(0.8); }
+            60% { transform: translate(-4px, -2px); filter: hue-rotate(270deg) contrast(1.6); }
+            80% { transform: translate(4px, 3px); filter: hue-rotate(320deg); }
+        }
+        @keyframes tapFlare {
+            0%, 100% { transform: translateY(0) scale(1); }
+            40% { transform: translateY(-22px) scale(1.08); opacity: 0.85; }
+            70% { transform: translateY(2px) scale(0.96); }
+        }
 
         /* --- Resources --- */
         .resources {
@@ -387,14 +425,14 @@
         .rules-content strong { color: var(--gold); font-weight: bold; }
         .rules-content p { color: var(--text-dim); }
 
-        /* --- Mini-Game UI --- */
+        /* --- Mini-Game UI (Fixed Target Visibility) --- */
         .game-track {
             width: 100%;
             max-width: 300px;
-            height: 24px;
+            height: 28px;
             background: #09070f;
             border: 1px solid var(--void);
-            border-radius: 12px;
+            border-radius: 14px;
             position: relative;
             margin: 25px 0;
             overflow: hidden;
@@ -404,10 +442,11 @@
             position: absolute;
             left: 40%;
             width: 20%;
-            background: rgba(158, 27, 40, 0.45);
-            border-left: 1px dashed var(--crimson);
-            border-right: 1px dashed var(--crimson);
-            box-shadow: 0 0 15px var(--crimson-glow);
+            height: 100%; /* Добавлена высота полосы */
+            background: rgba(158, 27, 40, 0.65);
+            border-left: 2px solid var(--gold);
+            border-right: 2px solid var(--gold);
+            box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.4), 0 0 15px var(--crimson-glow);
         }
         .game-pointer {
             position: absolute;
@@ -415,7 +454,7 @@
             width: 6px;
             height: 100%;
             background: var(--gold);
-            box-shadow: 0 0 10px var(--gold);
+            box-shadow: 0 0 12px var(--gold);
             border-radius: 2px;
         }
 
@@ -471,7 +510,7 @@
     </div>
 
     <div class="stage">
-        <div class="pet-container stage-1" id="pet">
+        <div class="pet-container stage-1" id="pet" onclick="tapPet()">
             <svg viewBox="0 0 200 200" class="wisp-svg">
                 <defs>
                     <radialGradient id="wispGrad" cx="50%" cy="40%" r="50%">
@@ -578,9 +617,10 @@
                 </ul>
             </div>
             <div class="rules-section">
-                <div class="rules-subtitle">4. Таинства действий и Мини-игра</div>
+                <div class="rules-subtitle">4. Таинства действий и Баланс</div>
                 <ul>
-                    <li><strong>Ритуал:</strong> Расходует Свечу и Насыщение, давая Дух и Тьму. Дает шанс призвать Душу 💀. Чем гуще Тьма питомца, тем выше шанс привлечь Душу.</li>
+                    <li><strong>Кормление:</strong> Перерабатывает 2 💀 в 50 ед. Насыщения и 10 ед. Жизни.</li>
+                    <li><strong>Ритуал:</strong> Расходует Свечу и всего 5 Насыщения, давая 25 Духа и 10 Тьмы. При этом даёт шанс привлечь Душу 💀 (25% базовый, 50% при Тьме > 60%).</li>
                     <li><strong>Резонанс Бездны:</strong> Активная мини-игра. Поймайте бегущую стрелку точно по центру шкалы в багровой зоне (от 40% до 60%). Успех принесет вам сразу +4 Свечи и 50% шанс выбить Душу (💀) абсолютно бесплатно! Промах даст лишь 1 свечу и отнимет 5 Насыщения.</li>
                 </ul>
             </div>
@@ -592,10 +632,6 @@
                     <li><strong>Теневой Фантом (Ур. III):</strong> Возраст ≥ 7 дней + Тьма > 65</li>
                     <li><strong>Повелитель Бездны (Ур. IV):</strong> Возраст ≥ 14 дней + Тьма > 85</li>
                 </ul>
-            </div>
-            <div class="rules-section">
-                <div class="rules-subtitle">6. Автономность Времени</div>
-                <p>Бездна не спит. Пока вы отсутствуете, игра рассчитывает симуляцию в офлайн-режиме (до 24 часов). Заботьтесь о сытости и стабильности Анимы перед выходом из приложения.</p>
             </div>
         </div>
         <button class="close-btn" onclick="closeRules()">Вернуться к призыву</button>
@@ -639,7 +675,7 @@
     <!-- --- Modal: Mini-Game --- -->
     <div class="modal-overlay" id="miniGameModal">
         <div class="modal-title" style="color: var(--gold);">РЕЗОНАНС БЕЗДНЫ</div>
-        <div class="modal-text">Уловите частоту колебаний Бездны по центру шкалы</div>
+        <div class="modal-text">Уловите частоту колебаний Бездны в багровом секторе</div>
         <div class="game-track">
             <div class="game-target"></div>
             <div class="game-pointer" id="mg-pointer"></div>
@@ -659,7 +695,7 @@
     </div>
 
     <script>
-       // --- Telegram Init (Safe Mode) ---
+     // --- Telegram Init (Safe Mode) ---
         let tg = null;
         try {
             if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
@@ -691,30 +727,25 @@
         // --- Game State ---
         const MAX_STAT = 100;
         let state = {
-            life: 100,
-            satiation: 100,
-            spirit: 100,
-            darkness: 50,
-            souls: 10,
-            candles: 5,
-            elixirs: 2,
-            ageDays: 0,
-            stage: 1,
-            petName: "Безымянный",
-            isDead: false,
-            isWorking: false,
-            lastSave: Date.now()
+            life: 100, satiation: 100, spirit: 100, darkness: 50,
+            souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
+            petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now()
         };
 
         let gameLoopId = null;
         let miniGameInterval = null;
         let pointerPos = 0;
         let pointerDir = 1;
-        
-        // НОВЫЙ ТЕМП: 1 тик = 60000 мс (1 минута) вместо 5 секунд.
         const TICK_RATE = 60000; 
 
-        // --- Core Logic ---
+        const tapPhrases = [
+            "Сущность издает тихий ментальный скрежет.",
+            "Питомец льнет к твоему теплу...",
+            "Эхо чужих мыслей проносится в сознании.",
+            "Бездна судорожно вздрагивает от прикосновения.",
+            "Искры темной анимы срываются с его оболочки."
+        ];
+
         function init() {
             loadGame();
             calculateOffline();
@@ -727,22 +758,36 @@
         function gameLoop() {
             if (state.isDead) return;
 
-            // Сбалансированный расход на 1 минуту игрового времени
-            state.satiation = Math.max(0, state.satiation - 0.4); // ~4 часа до нуля
-            state.spirit = Math.max(0, state.spirit - 0.2);      // ~8 часов до нуля
+            state.satiation = Math.max(0, state.satiation - 0.4); 
+            state.spirit = Math.max(0, state.spirit - 0.2);      
             state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
             
-            if (state.darkness > 75) {
-                state.life = Math.max(0, state.life - 0.5);
-            }
-            if (state.satiation === 0 || state.spirit === 0) {
-                state.life = Math.max(0, state.life - 1);
-            }
+            if (state.darkness > 75) state.life = Math.max(0, state.life - 0.5);
+            if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 1);
 
-            state.ageDays += 0.005; // 1 игровой день наступает примерно за 3.3 реальных часа (200 тиков)
+            state.ageDays += 0.005; 
             checkEvolution();
             checkDeath();
             saveGame();
+            updateUI();
+        }
+
+        // --- Interactive Tap ---
+        function tapPet() {
+            if (state.isDead || state.isWorking) return;
+            const pet = document.getElementById('pet');
+            
+            const animClasses = ['anim-glow', 'anim-shiver', 'anim-squish', 'anim-glitch', 'anim-flare'];
+            pet.classList.remove(...animClasses);
+            
+            void pet.offsetWidth; // Force Reflow
+            
+            const randIdx = Math.floor(Math.random() * animClasses.length);
+            pet.classList.add(animClasses[randIdx]);
+            
+            state.spirit = Math.min(MAX_STAT, state.spirit + 0.5); // Микро-бонус за клик
+            showLog(tapPhrases[randIdx]);
+            safeHaptic('impact', 'light');
             updateUI();
         }
 
@@ -774,16 +819,16 @@
             }
         }
 
-        // --- Actions ---
+        // --- Actions (Rebalanced) ---
         function actionFeed() {
             if (state.isDead || state.isWorking) return;
             if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); safeHaptic('notification', 'error'); return; }
             
             state.souls -= 2;
-            state.satiation = Math.min(MAX_STAT, state.satiation + 35);
-            state.life = Math.min(MAX_STAT, state.life + 5);
+            state.satiation = Math.min(MAX_STAT, state.satiation + 50); // Изменено с 35 на 50
+            state.life = Math.min(MAX_STAT, state.life + 10);          // Изменено с 5 на 10
             state.darkness = Math.max(0, state.darkness - 5);
-            showLog("Плоть поглощена. Травмы затягиваются.");
+            showLog("Плоть поглощена. Анима восстанавливается.");
             safeHaptic('impact', 'light');
             updateUI();
         }
@@ -791,19 +836,19 @@
         function actionRitual() {
             if (state.isDead || state.isWorking) return;
             if (state.candles < 1) { showLog("Нечем разжечь огонь! (Нужна 1 🕯️)"); safeHaptic('notification', 'error'); return; }
-            if (state.satiation < 10) { showLog("Питомец слишком истощен."); return; }
+            if (state.satiation < 5) { showLog("Питомец слишком истощен."); return; }
 
             state.candles -= 1;
-            state.satiation = Math.max(0, state.satiation - 10);
-            state.spirit = Math.min(MAX_STAT, state.spirit + 20);
-            state.darkness = Math.min(MAX_STAT, state.darkness + 8);
+            state.satiation = Math.max(0, state.satiation - 5);    // Снижено с 10 на 5
+            state.spirit = Math.min(MAX_STAT, state.spirit + 25);  // Увеличено с 20 на 25
+            state.darkness = Math.min(MAX_STAT, state.darkness + 10);
             
             if (Math.random() < (state.darkness > 60 ? 0.5 : 0.25)) {
                 state.souls += 1;
-                showLog("Ритуал удался! Найдена чистая душа.");
+                showLog("Ритуал удался! Уловлена чистая душа.");
                 safeHaptic('impact', 'heavy');
             } else {
-                showLog("Тьма поглотила ментальный шепот...");
+                showLog("Тьма рассеяла ментальный зов...");
                 safeHaptic('impact', 'medium');
             }
             updateUI();
@@ -834,7 +879,7 @@
             updateUI();
         }
 
-        // --- Active Mini-Game System (60 FPS & Smooth Movement) ---
+        // --- Active Mini-Game System ---
         function startMiniGame() {
             if (state.isDead || state.isWorking) return;
             
@@ -847,7 +892,7 @@
             safeHaptic('impact', 'light');
 
             miniGameInterval = setInterval(() => {
-                pointerPos += pointerDir * 2; 
+                pointerPos += pointerDir * 2.5; 
                 if (pointerPos >= 100) { pointerPos = 100; pointerDir = -1; }
                 if (pointerPos <= 0) { pointerPos = 0; pointerDir = 1; }
                 document.getElementById('mg-pointer').style.left = pointerPos + '%';
@@ -864,8 +909,7 @@
 
             if (pointerPos >= 40 && pointerPos <= 60) {
                 state.candles += 4;
-                let bonusSoul = Math.random() < 0.5; 
-                if (bonusSoul) {
+                if (Math.random() < 0.5) {
                     state.souls += 1;
                     showLog(`Резонанс (${roundedPos}%)! +4 🕯️ и +1 💀`);
                 } else {
@@ -875,7 +919,7 @@
             } else {
                 state.candles += 1;
                 state.satiation = Math.max(0, state.satiation - 5);
-                showLog(`Промах (${roundedPos}%). Надо от 40% до 60%. -5 Насыщ.`);
+                showLog(`Промах (${roundedPos}%). Требуется от 40% до 60%. -5 Насыщ.`);
                 safeHaptic('notification', 'warning');
             }
 
@@ -883,50 +927,27 @@
             updateUI();
         }
 
-        // --- Shop System ---
-        function openShop() {
-            if (state.isDead) return;
-            document.getElementById('shopModal').classList.add('active');
-        }
-
-        // --- Rules Handlers ---
-        function openRules() {
-            document.getElementById('rulesModal').classList.add('active');
-        }
-
-        function closeRules() {
-            document.getElementById('rulesModal').classList.remove('active');
-        }
-
-        function closeShop() {
-            document.getElementById('shopModal').classList.remove('active');
-        }
+        // --- Shop Handlers ---
+        function openShop() { if (!state.isDead) document.getElementById('shopModal').classList.add('active'); }
+        function openRules() { document.getElementById('rulesModal').classList.add('active'); }
+        function closeRules() { document.getElementById('rulesModal').classList.remove('active'); }
+        function closeShop() { document.getElementById('shopModal').classList.remove('active'); }
 
         function buyItem(resource, cost, amount) {
             if (state.isDead) return;
-            if (state.souls < cost) {
-                showLog(`Недостаточно душ! Нужно ${cost} 💀`);
-                safeHaptic('notification', 'error');
-                return;
-            }
+            if (state.souls < cost) { showLog(`Недостаточно душ! Нужно ${cost} 💀`); safeHaptic('notification', 'error'); return; }
 
             state.souls -= cost;
             state[resource] += amount;
-            
             const names = { 'candles': 'Свечи', 'elixirs': 'Эликсир' };
             showLog(`Приобретено: ${amount} ${names[resource]}`);
             safeHaptic('notification', 'success');
-            
             updateUI();
         }
 
         function renamePet() {
             if (state.isDead) return;
-            if (state.souls < 3) {
-                showLog("Недостаточно душ! Нужно 3 💀");
-                safeHaptic('notification', 'error');
-                return;
-            }
+            if (state.souls < 3) { showLog("Недостаточно душ! Нужно 3 💀"); safeHaptic('notification', 'error'); return; }
             
             const inputField = document.getElementById('rename-input');
             const newName = inputField.value;
@@ -934,7 +955,7 @@
             if (newName && newName.trim() !== "") {
                 state.souls -= 3;
                 state.petName = newName.trim().substring(0, 15);
-                showLog(`Новая личность: ${state.petName}`);
+                showLog(`Новое имя: ${state.petName}`);
                 inputField.value = ""; 
                 safeHaptic('notification', 'success');
                 closeShop();
@@ -959,7 +980,7 @@
             showLog("Новая израненная душа призвана.");
         }
 
-        // --- UI Update (Strict Sync) ---
+        // --- UI Update ---
         function updateUI() {
             setBar('bar-life', state.life, 'val-life');
             setBar('bar-satiation', state.satiation, 'val-satiation');
@@ -981,8 +1002,12 @@
             document.getElementById('stage-name').innerText = names[state.stage - 1] || "Неизвестно";
 
             const pet = document.getElementById('pet');
+            // Сохраняем анимационные классы при обновлении стадий
+            const activeAnims = ['anim-glow', 'anim-shiver', 'anim-squish', 'anim-glitch', 'anim-flare'].filter(c => pet.classList.contains(c));
+            
             pet.className = 'pet-container';
             pet.classList.add(`stage-${state.stage}`);
+            activeAnims.forEach(c => pet.classList.add(c));
             
             if (state.isDead) {
                 pet.classList.add('dead');
@@ -992,26 +1017,15 @@
                 pet.classList.add('sad');
             }
 
-            const btns = document.querySelectorAll('.actions .btn');
-            btns.forEach(btn => {
-                if (btn.id === 'btn-shop') {
-                    btn.disabled = state.isDead;
-                } else {
-                    btn.disabled = state.isDead || state.isWorking;
-                }
+            document.querySelectorAll('.actions .btn').forEach(btn => {
+                btn.disabled = btn.id === 'btn-shop' ? state.isDead : (state.isDead || state.isWorking);
             });
-            
-            const workBtn = document.getElementById('btn-work');
-            if (state.isWorking) {
-                workBtn.disabled = true;
-            }
         }
 
         function setBar(barId, value, textId) {
             const bar = document.getElementById(barId);
-            const text = document.getElementById(textId);
+            document.getElementById(textId).innerText = Math.floor(value);
             bar.style.width = value + '%';
-            text.innerText = Math.floor(value);
             
             bar.className = 'stat-bar-fill'; 
             if (barId === 'bar-life') bar.classList.add('fill-life');
@@ -1032,23 +1046,16 @@
             logTimeout = setTimeout(() => log.classList.remove('show'), 2500);
         }
 
-        // --- Save/Load System ---
         function saveGame() {
             state.lastSave = Date.now();
-            try {
-                localStorage.setItem('traumagochi_state', JSON.stringify(state));
-            } catch (e) { console.warn("Save failed"); }
+            try { localStorage.setItem('traumagochi_state', JSON.stringify(state)); } catch (e) {}
         }
 
         function loadGame() {
             try {
                 const saved = localStorage.getItem('traumagochi_state');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    state = { ...state, ...parsed };
-                    state.isWorking = false; 
-                }
-            } catch (e) { console.warn("Load failed"); }
+                if (saved) { state = { ...state, ...JSON.parse(saved) }; state.isWorking = false; }
+            } catch (e) {}
         }
 
         function calculateOffline() {
@@ -1059,12 +1066,9 @@
             if (diffSeconds > 10) {
                 const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
                 if (ticks > 0) {
-                    const simulatedTicks = Math.min(ticks, 1440); // Расчет оффлайна увеличен до 24 часов (1440 минут)
+                    const simulatedTicks = Math.min(ticks, 1440); 
                     for (let i = 0; i < simulatedTicks; i++) {
-                        if (state.life <= 0) {
-                            state.isDead = true;
-                            break;
-                        }
+                        if (state.life <= 0) { state.isDead = true; break; }
                         state.satiation = Math.max(0, state.satiation - 0.4);
                         state.spirit = Math.max(0, state.spirit - 0.2);
                         state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
@@ -1075,12 +1079,11 @@
                     }
                     checkEvolution();
                     checkDeath();
-                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. в разломе сознания.`);
+                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. вне симуляции.`);
                 }
             }
         }
 
-        // Start
         init();
     </script>
 </body>
