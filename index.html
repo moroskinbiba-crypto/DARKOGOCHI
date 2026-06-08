@@ -69,6 +69,25 @@
         .pet-name { font-size: 1.2rem; color: var(--text-main); margin-top: 4px; font-style: italic; font-weight: 600; letter-spacing: 1px; }
         .age-info { font-size: 0.8rem; color: var(--text-dim); margin-top: 1px; }
 
+        .rules-trigger-btn {
+            background: rgba(28, 20, 38, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--text-dim);
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+            margin-top: 6px;
+        }
+        .rules-trigger-btn:active {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
         /* --- Main Stage (SVG Pet) --- */
         .stage {
             flex: 1;
@@ -341,6 +360,53 @@
         }
         .close-btn:active { background: rgba(255,255,255,0.08); color: #fff; border-color: #fff; }
 
+        /* --- Rules Section Style --- */
+        .rules-content {
+            text-align: left;
+            max-width: 340px;
+            width: 100%;
+            max-height: 48vh;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 6px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+        .rules-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .rules-content::-webkit-scrollbar-thumb {
+            background: var(--gold-dim);
+            border-radius: 2px;
+        }
+        .rules-section {
+            margin-bottom: 16px;
+        }
+        .rules-subtitle {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            padding-bottom: 2px;
+            letter-spacing: 1px;
+        }
+        .rules-content ul {
+            padding-left: 18px;
+            margin-top: 4px;
+        }
+        .rules-content li {
+            margin-bottom: 6px;
+            color: var(--text-dim);
+        }
+        .rules-content strong {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        .rules-content p {
+            color: var(--text-dim);
+        }
+
         /* Log Toast */
         .log-toast {
             position: fixed;
@@ -386,6 +452,9 @@
         </div>
         <div class="pet-name" id="pet-name">Безымянный</div>
         <div class="age-info">Возраст: <span id="age">0</span> дней</div>
+        <div>
+            <button class="rules-trigger-btn" onclick="openRules()">📜 Свод Правил</button>
+        </div>
         <div class="runes" style="transform: scaleX(-1); margin-top: 4px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
     </div>
 
@@ -469,6 +538,55 @@
     </div>
 
     <div class="log-toast" id="log">Бездна шепчет...</div>
+
+    <div class="modal-overlay" id="rulesModal">
+        <div class="modal-title">Законы Бездны</div>
+        <div class="modal-text">Изучите тайны поддержания искры во тьме</div>
+        <div class="rules-content">
+            <div class="rules-section">
+                <div class="rules-subtitle">1. Выживание Анимы</div>
+                <p>Ваша цель — продлить жизнь призванной сущности. Если параметр <strong>Жизнь</strong> падает до 0, игра окончена (Anima Perit).</p>
+            </div>
+            <div class="rules-section">
+                <div class="rules-subtitle">2. Жизненные Атрибуты</div>
+                <ul>
+                    <li><strong>Жизнь:</strong> Падает, если существо голодает, теряет дух или когда Тьма становится слишком давящей.</li>
+                    <li><strong>Насыщение:</strong> Падает автономно (-2 каждые 5 сек). При 0 начинает отнимать Жизнь. Восстанавливается едой.</li>
+                    <li><strong>Дух:</strong> Угасает со временем (-1 каждые 5 сек). При 0 наносит критический урон Жизни. Восстанавливается Ритуалами.</li>
+                    <li><strong>Тьма:</strong> Стабильно растет (+0.5 каждые 5 сек). Если превысит 75%, начинает душить существо (-3 Жизни за тик). Однако высокая Тьма необходима для эволюции.</li>
+                </ul>
+            </div>
+            <div class="rules-section">
+                <div class="rules-subtitle">3. Компоненты и Ресурсы</div>
+                <ul>
+                    <li><strong>Души (💀):</strong> Тратятся на Кормление (2 💀) и покупки. Добываются с шансом во время успешных Ритуалов.</li>
+                    <li><strong>Свечи (🕯️):</strong> Расходный материал для Ритуалов и Тьмы. Приносятся из глубин сознания во время Медитации.</li>
+                    <li><strong>Эликсиры (⚗️):</strong> Магическая кровь, мгновенно исцеляющая 40 единиц Жизни. Доступна в Лавке.</li>
+                </ul>
+            </div>
+            <div class="rules-section">
+                <div class="rules-subtitle">4. Таинства действий</div>
+                <ul>
+                    <li><strong>Ритуал:</strong> Расходует Свечу и Насыщение, давая Дух и Тьму. Дает шанс призвать Душу 💀. Чем гуще Тьма питомца, тем выше шанс привлечь Душу.</li>
+                    <li><strong>Медитация:</strong> Запирает врата действий игрока на 5 секунд, но гарантированно принесет +3 Свечи без затрат ресурсов.</li>
+                </ul>
+            </div>
+            <div class="rules-section">
+                <div class="rules-subtitle">5. Путь к Эволюции</div>
+                <p>Когда сущность достигает зрелости при должном уровне Тьмы, её форма необратимо перерождается:</p>
+                <ul>
+                    <li><strong>Блуждающий Дух (Ур. II):</strong> Возраст ≥ 3 дней + Тьма > 40</li>
+                    <li><strong>Теневой Фантом (Ур. III):</strong> Возраст ≥ 7 дней + Тьма > 65</li>
+                    <li><strong>Повелитель Бездны (Ур. IV):</strong> Возраст ≥ 14 дней + Тьма > 85</li>
+                </ul>
+            </div>
+            <div class="rules-section">
+                <div class="rules-subtitle">6. Автономность Времени</div>
+                <p>Бездна не спит. Пока вы отсутствуете, игра рассчитывает симуляцию в офлайн-режиме (до 25 минут). Заботьтесь о сытости и стабильности Анимы перед выходом из приложения.</p>
+            </div>
+        </div>
+        <button class="close-btn" onclick="closeRules()">Вернуться к призыву</button>
+    </div>
 
     <div class="modal-overlay" id="shopModal">
         <div class="modal-title">Лавка Теней</div>
@@ -685,6 +803,15 @@
 
         function closeShop() {
             document.getElementById('shopModal').classList.remove('active');
+        }
+
+        // --- Rules Handlers ---
+        function openRules() {
+            document.getElementById('rulesModal').classList.add('active');
+        }
+
+        function closeRules() {
+            document.getElementById('rulesModal').classList.remove('active');
         }
 
         function buyItem(resource, cost, amount) {
