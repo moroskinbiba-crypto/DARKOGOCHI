@@ -660,20 +660,33 @@
     </div>
 
     <script>
-        // --- Telegram Init ---
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#030305');
-        tg.setBackgroundColor('#030305');
+     // --- Telegram Init (Safe Mode) ---
+        let tg = null;
+        try {
+            if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
+                if (typeof tg.ready === 'function') tg.ready();
+                if (typeof tg.expand === 'function') tg.expand();
+                if (typeof tg.setHeaderColor === 'function') tg.setHeaderColor('#030305');
+                if (typeof tg.setBackgroundColor === 'function') tg.setBackgroundColor('#030305');
+            }
+        } catch (e) {
+            console.warn("Telegram API недоступен или ограничен. Запуск в автономном режиме.");
+        }
 
         // --- Safe Haptic Wrapper (PC Fix) ---
         function safeHaptic(type, style) {
             if (tg && tg.HapticFeedback) {
                 try {
-                    if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
-                    if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
-                } catch(e) { console.log("Haptic failed passively"); }
+                    if (type === 'impact' && typeof tg.HapticFeedback.impactOccurred === 'function') {
+                        tg.HapticFeedback.impactOccurred(style);
+                    }
+                    if (type === 'notification' && typeof tg.HapticFeedback.notificationOccurred === 'function') {
+                        tg.HapticFeedback.notificationOccurred(style);
+                    }
+                } catch(e) { 
+                    // Молча игнорируем отсутствие вибромотора на ПК
+                }
             }
         }
 
