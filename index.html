@@ -91,7 +91,7 @@
             height: 100%;
             filter: drop-shadow(0 0 25px var(--crimson-glow));
             animation: float 5s ease-in-out infinite;
-            transition: filter 1s ease;
+            transition: filter 1s ease, transform 1s ease;
         }
 
         .wisp-body {
@@ -110,6 +110,11 @@
             transform-origin: center;
             transition: transform 0.5s ease, fill 0.5s ease;
         }
+
+        /* Визуализация стадий эволюции сущности */
+        .pet-container.stage-2 .wisp-svg { filter: drop-shadow(0 0 30px #5a189a); }
+        .pet-container.stage-3 .wisp-svg { filter: drop-shadow(0 0 35px #9e1b28) hue-rotate(45deg); }
+        .pet-container.stage-4 .wisp-svg { filter: drop-shadow(0 0 40px #000) drop-shadow(0 0 20px var(--crimson)); transform: scale(1.1); }
 
         /* Настройка визуальных состояний питомца */
         .pet-container.sad .wisp-svg { animation: float 6s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(158, 27, 40, 0.2)) grayscale(0.7) brightness(0.6); }
@@ -302,7 +307,6 @@
         .shop-btn:active:not(:disabled) { background: var(--gold); color: #000; }
         .shop-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* Стилизация нового текстового инпута для переименования */
         .rename-container {
             display: flex;
             gap: 8px;
@@ -364,7 +368,7 @@
         /* Animations */
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         @keyframes breathe { 0%, 100% { transform: scale(1) translateY(0px); } 50% { transform: scale(1.04) translateY(3px); } }
-        @keyframes pulse-core { 0%, 100% { opacity: 0.4; transform: scale(1.15) center; } 50% { opacity: 0.85; transform: scale(1.25) center; } }
+        @keyframes pulse-core { 0%, 100% { opacity: 0.4; transform: scale(1.15); } 50% { opacity: 0.85; transform: scale(1.25); } }
         @keyframes blink { 0%, 48%, 52%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.08); } }
         @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
@@ -530,7 +534,7 @@
             stage: 1,
             petName: "Безымянный",
             isDead: false,
-            isWorking: false, // Новое состояние защиты от спама медитации
+            isWorking: false,
             lastSave: Date.now()
         };
 
@@ -588,7 +592,7 @@
                 state.isWorking = false;
                 if (gameLoopId) clearInterval(gameLoopId);
                 updateUI();
-                document.getElementById('final-days').innerText = Math.floor(state.ageDays);
+                document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
                 document.getElementById('gameOverModal').classList.add('active');
                 tg.HapticFeedback.notificationOccurred('error');
             }
@@ -596,7 +600,7 @@
 
         // --- Actions ---
         function actionFeed() {
-            if (state.isDead) return;
+            if (state.isDead || state.isWorking) return;
             if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); tg.HapticFeedback.notificationOccurred('error'); return; }
             
             state.souls -= 2;
@@ -609,7 +613,7 @@
         }
 
         function actionRitual() {
-            if (state.isDead) return;
+            if (state.isDead || state.isWorking) return;
             if (state.candles < 1) { showLog("Нечем разжечь огонь! (Нужна 1 🕯️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
             if (state.satiation < 10) { showLog("Питомец слишком голоден."); return; }
 
@@ -630,7 +634,7 @@
         }
 
         function actionDarkness() {
-            if (state.isDead) return;
+            if (state.isDead || state.isWorking) return;
             if (state.candles < 1) { showLog("Нужна 1 🕯️ для погружения во тьму."); tg.HapticFeedback.notificationOccurred('error'); return; }
             
             state.candles -= 1;
@@ -642,7 +646,7 @@
         }
 
         function actionHeal() {
-            if (state.isDead) return;
+            if (state.isDead || state.isWorking) return;
             if (state.elixirs < 1) { showLog("Нет эликсиров! (Нужен 1 ⚗️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
             if (state.life >= MAX_STAT) { showLog("Питомец полностью здоров."); return; }
             
@@ -654,7 +658,6 @@
             updateUI();
         }
 
-        // Фикс защиты от спама (Абуз медитации устранен)
         function actionWork() {
             if (state.isDead || state.isWorking) return;
             
@@ -681,7 +684,6 @@
         }
 
         function closeShop() {
-            document.getElementById('shopModal').classList.remove('remove');
             document.getElementById('shopModal').classList.remove('active');
         }
 
@@ -703,7 +705,6 @@
             updateUI();
         }
 
-        // Новая функция переименования без prompt()
         function renamePet() {
             if (state.isDead) return;
             if (state.souls < 3) {
@@ -760,13 +761,13 @@
             document.getElementById('pet-name').innerText = state.petName;
 
             const times = ["Рассвет 00:00", "Утро 06:00", "Полдень 12:00", "Закат 18:00", "Ночь 00:00"];
-            const timeIdx = Math.floor((state.ageDays * 24) / (24/5)) % 5;
+            const timeIdx = Math.floor(state.ageDays * 5) % 5;
             document.getElementById('time').innerText = times[timeIdx];
 
             const names = ["Личинка Ур. I", "Блуждающий Дух", "Теневой Фантом", "Повелитель Бездны"];
             document.getElementById('stage-name').innerText = names[state.stage - 1] || "Неизвестно";
 
-            // Pet Visuals (Фикс интеграции сна)
+            // Pet Visuals
             const pet = document.getElementById('pet');
             pet.className = 'pet-container';
             pet.classList.add(`stage-${state.stage}`);
@@ -774,14 +775,20 @@
             if (state.isDead) {
                 pet.classList.add('dead');
             } else if (timeIdx === 4) { 
-                pet.classList.add('sleeping'); // Питомец теперь корректно засыпает ночью
+                pet.classList.add('sleeping');
             } else if (state.life < 40 || state.satiation < 30 || state.spirit < 30) {
                 pet.classList.add('sad');
             }
 
-            // Button States & Медитация текст
+            // Button States & Защита от спама при медитации
             const btns = document.querySelectorAll('.actions .btn');
-            btns.forEach(btn => btn.disabled = state.isDead);
+            btns.forEach(btn => {
+                if (btn.id === 'btn-shop') {
+                    btn.disabled = state.isDead;
+                } else {
+                    btn.disabled = state.isDead || state.isWorking;
+                }
+            });
             
             const workBtn = document.getElementById('btn-work');
             const workCost = document.getElementById('work-cost');
@@ -832,7 +839,7 @@
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     state = { ...state, ...parsed };
-                    state.isWorking = false; // Защита от зависания статуса при перезапуске
+                    state.isWorking = false; 
                 }
             } catch (e) { console.warn("Load failed"); }
         }
@@ -847,6 +854,10 @@
                 if (ticks > 0) {
                     const simulatedTicks = Math.min(ticks, 300); // Ограничение ~25 мин офлайна
                     for (let i = 0; i < simulatedTicks; i++) {
+                        if (state.life <= 0) {
+                            state.isDead = true;
+                            break;
+                        }
                         state.satiation = Math.max(0, state.satiation - 2);
                         state.spirit = Math.max(0, state.spirit - 1);
                         state.darkness = Math.min(MAX_STAT, state.darkness + 0.5);
