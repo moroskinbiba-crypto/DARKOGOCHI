@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ANIMA OBSCURA</title>
+    <title>TRAUMAGOCHI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <style>
@@ -130,12 +130,10 @@
             transition: transform 0.5s ease, fill 0.5s ease;
         }
 
-        /* Визуализация стадий эволюции сущности */
         .pet-container.stage-2 .wisp-svg { filter: drop-shadow(0 0 30px #5a189a); }
         .pet-container.stage-3 .wisp-svg { filter: drop-shadow(0 0 35px #9e1b28) hue-rotate(45deg); }
         .pet-container.stage-4 .wisp-svg { filter: drop-shadow(0 0 40px #000) drop-shadow(0 0 20px var(--crimson)); transform: scale(1.1); }
 
-        /* Настройка визуальных состояний питомца */
         .pet-container.sad .wisp-svg { animation: float 6s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(158, 27, 40, 0.2)) grayscale(0.7) brightness(0.6); }
         .pet-container.sad .eye { transform: scaleY(0.3); animation: none; }
         
@@ -372,16 +370,9 @@
             font-size: 0.95rem;
             line-height: 1.45;
         }
-        .rules-content::-webkit-scrollbar {
-            width: 4px;
-        }
-        .rules-content::-webkit-scrollbar-thumb {
-            background: var(--gold-dim);
-            border-radius: 2px;
-        }
-        .rules-section {
-            margin-bottom: 16px;
-        }
+        .rules-content::-webkit-scrollbar { width: 4px; }
+        .rules-content::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+        .rules-section { margin-bottom: 16px; }
         .rules-subtitle {
             font-family: 'Cinzel', serif;
             color: var(--gold);
@@ -391,20 +382,42 @@
             padding-bottom: 2px;
             letter-spacing: 1px;
         }
-        .rules-content ul {
-            padding-left: 18px;
-            margin-top: 4px;
+        .rules-content ul { padding-left: 18px; margin-top: 4px; }
+        .rules-content li { margin-bottom: 6px; color: var(--text-dim); }
+        .rules-content strong { color: var(--gold); font-weight: bold; }
+        .rules-content p { color: var(--text-dim); }
+
+        /* --- Mini-Game UI --- */
+        .game-track {
+            width: 100%;
+            max-width: 300px;
+            height: 24px;
+            background: #09070f;
+            border: 1px solid var(--void);
+            border-radius: 12px;
+            position: relative;
+            margin: 25px 0;
+            overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
         }
-        .rules-content li {
-            margin-bottom: 6px;
-            color: var(--text-dim);
+        .game-target {
+            position: absolute;
+            left: 42%;
+            width: 16%;
+            height: 100%;
+            background: rgba(158, 27, 40, 0.45);
+            border-left: 1px dashed var(--crimson);
+            border-right: 1px dashed var(--crimson);
+            box-shadow: 0 0 15px var(--crimson-glow);
         }
-        .rules-content strong {
-            color: var(--gold);
-            font-weight: bold;
-        }
-        .rules-content p {
-            color: var(--text-dim);
+        .game-pointer {
+            position: absolute;
+            left: 0%;
+            width: 6px;
+            height: 100%;
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+            border-radius: 2px;
         }
 
         /* Log Toast */
@@ -442,7 +455,7 @@
 <body>
 
     <div class="header">
-        <h1 class="title">ANIMA OBSCURA</h1>
+        <h1 class="title">TRAUMAGOCHI</h1>
         <div class="runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
         <div class="meta-info">
             <span id="day">День 1</span> · <span id="time">Рассвет 00:00</span>
@@ -531,16 +544,17 @@
             <span>👜 Лавка</span>
             <span class="btn-cost">Товары</span>
         </button>
-        <button class="btn" id="btn-work" onclick="actionWork()">
-            <span>⚰️ Медитация</span>
-            <span class="btn-cost" id="work-cost">+3 Свечи (5с)</span>
+        <button class="btn" id="btn-work" onclick="startMiniGame()">
+            <span>⚡ Резонанс</span>
+            <span class="btn-cost" id="work-cost">Мини-игра (+Свечи)</span>
         </button>
     </div>
 
     <div class="log-toast" id="log">Бездна шепчет...</div>
 
+    <!-- --- Modal: Rules --- -->
     <div class="modal-overlay" id="rulesModal">
-        <div class="modal-title">Законы Бездны</div>
+        <div class="modal-title">Свод Травмагочи</div>
         <div class="modal-text">Изучите тайны поддержания искры во тьме</div>
         <div class="rules-content">
             <div class="rules-section">
@@ -560,15 +574,15 @@
                 <div class="rules-subtitle">3. Компоненты и Ресурсы</div>
                 <ul>
                     <li><strong>Души (💀):</strong> Тратятся на Кормление (2 💀) и покупки. Добываются с шансом во время успешных Ритуалов.</li>
-                    <li><strong>Свечи (🕯️):</strong> Расходный материал для Ритуалов и Тьмы. Приносятся из глубин сознания во время Медитации.</li>
+                    <li><strong>Свечи (🕯️):</strong> Расходный материал для Ритуалов и Тьмы. Приносятся из глубин сознания во время Резонанса.</li>
                     <li><strong>Эликсиры (⚗️):</strong> Магическая кровь, мгновенно исцеляющая 40 единиц Жизни. Доступна в Лавке.</li>
                 </ul>
             </div>
             <div class="rules-section">
-                <div class="rules-subtitle">4. Таинства действий</div>
+                <div class="rules-subtitle">4. Таинства действий и Мини-игра</div>
                 <ul>
                     <li><strong>Ритуал:</strong> Расходует Свечу и Насыщение, давая Дух и Тьму. Дает шанс призвать Душу 💀. Чем гуще Тьма питомца, тем выше шанс привлечь Душу.</li>
-                    <li><strong>Медитация:</strong> Запирает врата действий игрока на 5 секунд, но гарантированно принесет +3 Свечи без затрат ресурсов.</li>
+                    <li><strong>Резонанс Бездны:</strong> Активная мини-игра. Поймайте бегущую стрелку точно по центру шкалы в багровой зоне. Успех принесет вам сразу +4 Свечи и 50% шанс выбить Душу (💀) абсолютно бесплатно! Промах даст лишь 1 свечу и отнимет 5 Насыщения.</li>
                 </ul>
             </div>
             <div class="rules-section">
@@ -588,6 +602,7 @@
         <button class="close-btn" onclick="closeRules()">Вернуться к призыву</button>
     </div>
 
+    <!-- --- Modal: Shop --- -->
     <div class="modal-overlay" id="shopModal">
         <div class="modal-title">Лавка Теней</div>
         <div class="modal-text">Обменяйте души на материальные блага</div>
@@ -622,6 +637,20 @@
         <button class="close-btn" onclick="closeShop()">Закрыть врата</button>
     </div>
 
+    <!-- --- Modal: Mini-Game --- -->
+    <div class="modal-overlay" id="miniGameModal">
+        <div class="modal-title" style="color: var(--gold);">РЕЗОНАНС БЕЗДНЫ</div>
+        <div class="modal-text">Уловите частоту колебаний Бездны по центру шкалы</div>
+        <div class="game-track">
+            <div class="game-target"></div>
+            <div class="game-pointer" id="mg-pointer"></div>
+        </div>
+        <button class="btn" onclick="catchResonance()" style="width: 180px; margin-bottom: 20px; border-color: var(--gold);">
+            <span>✦ УЛОВИТЬ ✦</span>
+        </button>
+    </div>
+
+    <!-- --- Modal: Game Over --- -->
     <div class="modal-overlay" id="gameOverModal">
         <div class="modal-title">ANIMA PERIT</div>
         <div class="modal-text">Душа рассеялась во тьме.<br>Она просуществовала <span id="final-days" style="color:var(--gold); font-weight:bold;">0</span> дней.</div>
@@ -637,6 +666,16 @@
         tg.expand();
         tg.setHeaderColor('#030305');
         tg.setBackgroundColor('#030305');
+
+        // --- Safe Haptic Wrapper (PC Fix) ---
+        function safeHaptic(type, style) {
+            if (tg && tg.HapticFeedback) {
+                try {
+                    if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
+                    if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
+                } catch(e) { console.log("Haptic failed passively"); }
+            }
+        }
 
         // --- Game State ---
         const MAX_STAT = 100;
@@ -657,7 +696,10 @@
         };
 
         let gameLoopId = null;
-        const TICK_RATE = 5000; // 5 seconds
+        let miniGameInterval = null;
+        let pointerPos = 0;
+        let pointerDir = 1;
+        const TICK_RATE = 5000; 
 
         // --- Core Logic ---
         function init() {
@@ -666,7 +708,7 @@
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = setInterval(gameLoop, TICK_RATE);
-            showLog("Ритуал призыва завершен.");
+            showLog("Призыв Traumagochi завершен.");
         }
 
         function gameLoop() {
@@ -698,8 +740,8 @@
 
             if (newStage > state.stage) {
                 state.stage = newStage;
-                showLog(`Эволюция: Форма изменена!`);
-                tg.HapticFeedback.notificationOccurred('success');
+                showLog(`Эволюция: Ментальная форма изменена!`);
+                safeHaptic('notification', 'success');
             }
         }
 
@@ -709,31 +751,33 @@
                 state.life = 0;
                 state.isWorking = false;
                 if (gameLoopId) clearInterval(gameLoopId);
+                if (miniGameInterval) clearInterval(miniGameInterval);
                 updateUI();
                 document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
                 document.getElementById('gameOverModal').classList.add('active');
-                tg.HapticFeedback.notificationOccurred('error');
+                document.getElementById('miniGameModal').classList.remove('active');
+                safeHaptic('notification', 'error');
             }
         }
 
         // --- Actions ---
         function actionFeed() {
             if (state.isDead || state.isWorking) return;
-            if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); safeHaptic('notification', 'error'); return; }
             
             state.souls -= 2;
             state.satiation = Math.min(MAX_STAT, state.satiation + 35);
             state.life = Math.min(MAX_STAT, state.life + 5);
             state.darkness = Math.max(0, state.darkness - 5);
-            showLog("Плоть поглощена.");
-            tg.HapticFeedback.impactOccurred('light');
+            showLog("Плоть поглощена. Травмы затягиваются.");
+            safeHaptic('impact', 'light');
             updateUI();
         }
 
         function actionRitual() {
             if (state.isDead || state.isWorking) return;
-            if (state.candles < 1) { showLog("Нечем разжечь огонь! (Нужна 1 🕯️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
-            if (state.satiation < 10) { showLog("Питомец слишком голоден."); return; }
+            if (state.candles < 1) { showLog("Нечем разжечь огонь! (Нужна 1 🕯️)"); safeHaptic('notification', 'error'); return; }
+            if (state.satiation < 10) { showLog("Питомец слишком истощен."); return; }
 
             state.candles -= 1;
             state.satiation = Math.max(0, state.satiation - 10);
@@ -742,57 +786,88 @@
             
             if (Math.random() < (state.darkness > 60 ? 0.5 : 0.25)) {
                 state.souls += 1;
-                showLog("Ритуал удался! Обретена душа.");
-                tg.HapticFeedback.impactOccurred('heavy');
+                showLog("Ритуал удался! Найдена чистая душа.");
+                safeHaptic('impact', 'heavy');
             } else {
-                showLog("Тьма поглотила шепот...");
-                tg.HapticFeedback.impactOccurred('medium');
+                showLog("Тьма поглотила ментальный шепот...");
+                safeHaptic('impact', 'medium');
             }
             updateUI();
         }
 
         function actionDarkness() {
             if (state.isDead || state.isWorking) return;
-            if (state.candles < 1) { showLog("Нужна 1 🕯️ для погружения во тьму."); tg.HapticFeedback.notificationOccurred('error'); return; }
+            if (state.candles < 1) { showLog("Нужна 1 🕯️ для ухода в себя."); safeHaptic('notification', 'error'); return; }
             
             state.candles -= 1;
             state.spirit = Math.min(MAX_STAT, state.spirit + 30);
             state.darkness = Math.min(MAX_STAT, state.darkness + 15);
-            showLog("Дух крепнет, но тьма сгущается.");
-            tg.HapticFeedback.impactOccurred('medium');
+            showLog("Дух окреп, но психоз сгущается.");
+            safeHaptic('impact', 'medium');
             updateUI();
         }
 
         function actionHeal() {
             if (state.isDead || state.isWorking) return;
-            if (state.elixirs < 1) { showLog("Нет эликсиров! (Нужен 1 ⚗️)"); tg.HapticFeedback.notificationOccurred('error'); return; }
-            if (state.life >= MAX_STAT) { showLog("Питомец полностью здоров."); return; }
+            if (state.elixirs < 1) { showLog("Нет эликсиров! (Нужен 1 ⚗️)"); safeHaptic('notification', 'error'); return; }
+            if (state.life >= MAX_STAT) { showLog("Сущность абсолютно стабильна."); return; }
             
             state.elixirs -= 1;
             state.life = Math.min(MAX_STAT, state.life + 40);
             state.darkness = Math.max(0, state.darkness - 10);
-            showLog("Раны затягиваются.");
-            tg.HapticFeedback.impactOccurred('heavy');
+            showLog("Эликсир стабилизировал Жизнь.");
+            safeHaptic('impact', 'heavy');
             updateUI();
         }
 
-        function actionWork() {
+        // --- Active Mini-Game System ---
+        function startMiniGame() {
             if (state.isDead || state.isWorking) return;
             
             state.isWorking = true;
-            showLog("Медитация... Врата заперты.");
-            tg.HapticFeedback.impactOccurred('light');
+            pointerPos = 0;
+            pointerDir = 1;
             updateUI();
             
-            setTimeout(() => {
-                if (!state.isDead) {
-                    state.candles += 3;
-                    showLog("Медитация завершена. +3 🕯️");
-                    tg.HapticFeedback.notificationOccurred('success');
+            document.getElementById('miniGameModal').classList.add('active');
+            safeHaptic('impact', 'light');
+
+            // Скорость бега указателя (каждые 20мс)
+            miniGameInterval = setInterval(() => {
+                pointerPos += pointerDir * 4.5;
+                if (pointerPos >= 98) { pointerPos = 98; pointerDir = -1; }
+                if (pointerPos <= 0) { pointerPos = 0; pointerDir = 1; }
+                document.getElementById('mg-pointer').style.left = pointerPos + '%';
+            }, 20);
+        }
+
+        function catchResonance() {
+            if (!state.isWorking) return;
+            clearInterval(miniGameInterval);
+            document.getElementById('miniGameModal').classList.remove('active');
+            state.isWorking = false;
+
+            // Центральная багровая зона — от 42% до 58% шкалы
+            if (pointerPos >= 42 && pointerPos <= 58) {
+                state.candles += 4;
+                let bonusSoul = Math.random() < 0.5; // 50% шанс выбить череп
+                if (bonusSoul) {
+                    state.souls += 1;
+                    showLog("Идеальный резонанс! +4 🕯️ и +1 💀");
+                } else {
+                    showLog("Резонанс пойман! Получено +4 🕯️");
                 }
-                state.isWorking = false;
-                updateUI();
-            }, 5000);
+                safeHaptic('notification', 'success');
+            } else {
+                // Промах
+                state.candles += 1;
+                state.satiation = Math.max(0, state.satiation - 5);
+                showLog("Промах... Энергия рассеялась. +1 🕯️, -5 Насыщ.");
+                safeHaptic('notification', 'warning');
+            }
+
+            saveGame();
+            updateUI();
         }
 
         // --- Shop System ---
@@ -818,7 +893,7 @@
             if (state.isDead) return;
             if (state.souls < cost) {
                 showLog(`Недостаточно душ! Нужно ${cost} 💀`);
-                tg.HapticFeedback.notificationOccurred('error');
+                safeHaptic('notification', 'error');
                 return;
             }
 
@@ -827,7 +902,7 @@
             
             const names = { 'candles': 'Свечи', 'elixirs': 'Эликсир' };
             showLog(`Приобретено: ${amount} ${names[resource]}`);
-            tg.HapticFeedback.notificationOccurred('success');
+            safeHaptic('notification', 'success');
             
             updateUI();
         }
@@ -836,7 +911,7 @@
             if (state.isDead) return;
             if (state.souls < 3) {
                 showLog("Недостаточно душ! Нужно 3 💀");
-                tg.HapticFeedback.notificationOccurred('error');
+                safeHaptic('notification', 'error');
                 return;
             }
             
@@ -846,14 +921,14 @@
             if (newName && newName.trim() !== "") {
                 state.souls -= 3;
                 state.petName = newName.trim().substring(0, 15);
-                showLog(`Теперь его зовут: ${state.petName}`);
+                showLog(`Новая личность: ${state.petName}`);
                 inputField.value = ""; 
-                tg.HapticFeedback.notificationOccurred('success');
+                safeHaptic('notification', 'success');
                 closeShop();
                 updateUI();
             } else {
                 showLog("Введите корректное имя!");
-                tg.HapticFeedback.notificationOccurred('error');
+                safeHaptic('notification', 'error');
             }
         }
 
@@ -868,18 +943,16 @@
             gameLoopId = setInterval(gameLoop, TICK_RATE);
             saveGame();
             updateUI();
-            showLog("Новая душа призвана.");
+            showLog("Новая израненная душа призвана.");
         }
 
         // --- UI Update (Strict Sync) ---
         function updateUI() {
-            // Bars
             setBar('bar-life', state.life, 'val-life');
             setBar('bar-satiation', state.satiation, 'val-satiation');
             setBar('bar-spirit', state.spirit, 'val-spirit');
             setBar('bar-darkness', state.darkness, 'val-darkness');
 
-            // Text
             document.getElementById('res-souls').innerText = state.souls;
             document.getElementById('res-candles').innerText = state.candles;
             document.getElementById('res-elixirs').innerText = state.elixirs;
@@ -894,7 +967,6 @@
             const names = ["Личинка Ур. I", "Блуждающий Дух", "Теневой Фантом", "Повелитель Бездны"];
             document.getElementById('stage-name').innerText = names[state.stage - 1] || "Неизвестно";
 
-            // Pet Visuals
             const pet = document.getElementById('pet');
             pet.className = 'pet-container';
             pet.classList.add(`stage-${state.stage}`);
@@ -907,7 +979,6 @@
                 pet.classList.add('sad');
             }
 
-            // Button States & Защита от спама при медитации
             const btns = document.querySelectorAll('.actions .btn');
             btns.forEach(btn => {
                 if (btn.id === 'btn-shop') {
@@ -918,12 +989,8 @@
             });
             
             const workBtn = document.getElementById('btn-work');
-            const workCost = document.getElementById('work-cost');
             if (state.isWorking) {
                 workBtn.disabled = true;
-                workCost.innerText = "Медитирует...";
-            } else {
-                workCost.innerText = "+3 Свечи (5с)";
             }
         }
 
@@ -956,13 +1023,13 @@
         function saveGame() {
             state.lastSave = Date.now();
             try {
-                localStorage.setItem('animaObscuraFinal', JSON.stringify(state));
+                localStorage.setItem('traumagochi_state', JSON.stringify(state));
             } catch (e) { console.warn("Save failed"); }
         }
 
         function loadGame() {
             try {
-                const saved = localStorage.getItem('animaObscuraFinal');
+                const saved = localStorage.getItem('traumagochi_state');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     state = { ...state, ...parsed };
@@ -979,7 +1046,7 @@
             if (diffSeconds > 10) {
                 const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
                 if (ticks > 0) {
-                    const simulatedTicks = Math.min(ticks, 300); // Ограничение ~25 мин офлайна
+                    const simulatedTicks = Math.min(ticks, 300); // кап на ~25 мин офлайна
                     for (let i = 0; i < simulatedTicks; i++) {
                         if (state.life <= 0) {
                             state.isDead = true;
@@ -995,7 +1062,7 @@
                     }
                     checkEvolution();
                     checkDeath();
-                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. в бездне.`);
+                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. в разломе сознания.`);
                 }
             }
         }
