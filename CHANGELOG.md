@@ -24,3 +24,13 @@ Run `node tests/validate.mjs` from the repository root. It compiles the inline g
 - Delayed live timers catch up elapsed minute ticks, with the same one-day cap as offline catch-up.
 - Migrated older saves that do not have a simulation timestamp, then immediately persisted offline progress to prevent re-awarding it after a quick reload.
 - Added a regression test simulating four minutes offline despite autosaves.
+
+
+## UX, accessibility and resilience audit
+
+- Constrained the game shell to a centered, phone-like width on desktop while keeping the dark gothic theme and adapting the layout to short screens.
+- Removed the zoom lock, added visible keyboard focus, keyboard activation for the pet, reduced-motion support, dialog labels, and screen-reader announcements.
+- Added an explicit way to abandon Resonance and support Escape to close interruptible dialogs.
+- Fixed an invalid dead-pet CSS filter and made offline catch-up summaries match the time actually simulated, including the one-day cap.
+- Stopped autosaving after death and restarted the autosave timer after rebirth instead of leaving a needless interval running.
+- Added recovery messaging for corrupted or blocked browser storage and expanded regression checks for these cases and accessibility basics.
