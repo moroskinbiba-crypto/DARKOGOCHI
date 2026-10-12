@@ -769,7 +769,7 @@
         let state = {
             life: 100, satiation: 100, spirit: 100, darkness: 50,
             souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
-            petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(),
+            petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(), lastTick: Date.now(),
             memoryShards: 0, memoryUpgrades: {}, achievements: {},
             lifetime: {taps:0,feedings:0,rituals:0,darknessActions:0,healings:0,resonanceWins:0,resonanceAttempts:0,evolutions:0,minutesAlive:0,reincarnations:0},
             dailyVow: {key:"",index:0,progress:0,claimed:false}, deathRewarded:false
@@ -864,7 +864,14 @@
 
         function gameLoop() {
             if (state.isDead) return;
-            simulateOneMinute();
+            const now = Date.now();
+            const lastTick = Number.isFinite(Number(state.lastTick)) ? Number(state.lastTick) : now;
+            const elapsedMs = Math.max(0, now - lastTick);
+            const ticks = Math.floor(elapsedMs / TICK_RATE);
+            if (ticks <= 0) return;
+            const simulatedTicks = Math.min(ticks, 1440);
+            for (let i = 0; i < simulatedTicks && !state.isDead; i++) simulateOneMinute();
+            state.lastTick = ticks > simulatedTicks ? now : lastTick + simulatedTicks * TICK_RATE;
             saveGame();
             updateUI();
         }
@@ -1110,7 +1117,7 @@
             state = {
                 life: 100, satiation: 100, spirit: 100, darkness: 50,
                 souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
-                petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(),
+                petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(), lastTick: Date.now(),
                 ...preserved, deathRewarded:false, lastMemoryReward:0
             };
             normalizeMeta();
@@ -1231,6 +1238,8 @@
             state.stage = Math.min(4, Math.max(1, Math.floor(Number(state.stage) || 1)));
             state.petName = (typeof state.petName === 'string' ? state.petName : 'Безымянный').trim().slice(0,15) || 'Безымянный';
             state.dailyVow = {...{key:"",index:0,progress:0,claimed:false},...(state.dailyVow || {})};
+            if (!Number.isFinite(Number(state.lastTick))) state.lastTick = Number(state.lastSave) || Date.now();
+            state.lastTick = Math.max(0, Number(state.lastTick) || Date.now());
             state.deathRewarded = !!state.deathRewarded;
             if (!Number.isFinite(state.lastMemoryReward)) state.lastMemoryReward = 0;
             ensureDailyVow();
@@ -1365,25 +1374,31 @@
         function loadGame() {
             try {
                 const saved = localStorage.getItem('traumagochi_state');
-                if (saved) { state = { ...state, ...JSON.parse(saved) }; state.isWorking = false; }
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    state = { ...state, ...data };
+                    if (!Number.isFinite(Number(data.lastTick))) state.lastTick = Number(data.lastSave) || Date.now();
+                    state.isWorking = false;
+                }
             } catch (e) {}
         }
 
         function calculateOffline() {
             if (state.isDead) return;
             const now = Date.now();
-            const diffSeconds = Math.max(0, (now - state.lastSave) / 1000);
+            const lastTick = Number.isFinite(Number(state.lastTick)) ? Number(state.lastTick) : (Number(state.lastSave) || now);
+            const diffSeconds = Math.max(0, (now - lastTick) / 1000);
             if (diffSeconds > 10) {
                 const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
                 const simulatedTicks = Math.min(ticks, 1440);
                 for (let i = 0; i < simulatedTicks && !state.isDead; i++) simulateOneMinute();
+                state.lastTick = ticks > simulatedTicks ? now : lastTick + simulatedTicks * TICK_RATE;
                 if (ticks > 0 && !state.isDead) {
                     checkEvolution();
                     checkAchievements();
                     showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. вне симуляции.`);
                 }
             }
-            state.lastSave = now;
         }
 
         init();
