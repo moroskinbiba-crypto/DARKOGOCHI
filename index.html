@@ -818,6 +818,13 @@
         function init() {
             loadGame();
             normalizeMeta();
+            if (state.isDead && !state.deathRewarded) {
+                const inheritedReward = Math.max(1, Math.floor(state.ageDays / 3) + state.stage);
+                state.memoryShards += inheritedReward;
+                state.lastMemoryReward = inheritedReward;
+                state.deathRewarded = true;
+                saveGame();
+            }
             calculateOffline();
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
@@ -881,7 +888,6 @@
             checkAchievements();
             showLog(tapPhrases[randIdx]);
             safeHaptic('impact', 'light');
-            checkAchievements();
             saveGame();
             updateUI();
         }
@@ -912,6 +918,7 @@
                     state.lastMemoryReward = memoryReward;
                     state.deathRewarded = true;
                 }
+                saveGame();
                 if (gameLoopId) clearInterval(gameLoopId);
                 if (miniGameInterval) clearInterval(miniGameInterval);
                 updateUI();
@@ -937,6 +944,7 @@
             checkAchievements();
             showLog("Плоть поглощена. Анима восстанавливается.");
             safeHaptic('impact', 'light');
+            saveGame();
             updateUI();
         }
 
@@ -1211,7 +1219,18 @@
             state.achievements = {...(state.achievements || {})};
             const defaults = {taps:0,feedings:0,rituals:0,darknessActions:0,healings:0,resonanceWins:0,resonanceAttempts:0,evolutions:0,minutesAlive:0,reincarnations:0};
             state.lifetime = {...defaults,...(state.lifetime || {})};
+            Object.keys(defaults).forEach(k => { state.lifetime[k] = Math.max(0, Number(state.lifetime[k]) || 0); });
+            const statDefaults = {life:100,satiation:100,spirit:100,darkness:50};
+            Object.keys(statDefaults).forEach(k => {
+                const value = Number(state[k]);
+                state[k] = Math.max(0, Math.min(MAX_STAT, Number.isFinite(value) ? value : statDefaults[k]));
+            });
+            ['souls','candles','elixirs'].forEach(k => { state[k] = Math.max(0, Number(state[k]) || 0); });
+            state.ageDays = Math.max(0, Number(state.ageDays) || 0);
+            state.stage = Math.min(4, Math.max(1, Math.floor(Number(state.stage) || 1)));
+            state.petName = (typeof state.petName === 'string' ? state.petName : 'Безымянный').trim().slice(0,15) || 'Безымянный';
             state.dailyVow = {...{key:"",index:0,progress:0,claimed:false},...(state.dailyVow || {})};
+            state.deathRewarded = !!state.deathRewarded;
             if (!Number.isFinite(state.lastMemoryReward)) state.lastMemoryReward = 0;
             ensureDailyVow();
         }
