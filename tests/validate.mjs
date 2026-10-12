@@ -154,6 +154,10 @@ assert.ok(html.includes('id="chroniclesModal"'), 'Chronicles UI is present');
 assert.ok(html.includes('id="evo-progress"'), 'evolution progress UI is present');
 assert.ok(html.includes('id="memory-earned"'), 'game over exposes memory reward');
 assert.ok(html.includes('setInterval(saveGame, 15000)'), 'autosave is enabled for active lives');
+const workflow = await readFile('.github/workflows/validate-traumagochi.yml', 'utf8');
+assert.ok(workflow.includes('actions/checkout@v7'), 'checkout action uses the Node 24-compatible current major');
+assert.ok(workflow.includes('actions/setup-node@v7'), 'setup-node action uses the Node 24-compatible current major');
+assert.ok(workflow.includes('package-manager-cache: false'), 'workflow avoids unnecessary automatic dependency caching');
 assert.ok(html.includes('Учтены последние '), 'offline cap is explained instead of reporting unprocessed time');
 
 console.log('TRAUMAGOCHI validation passed: syntax, legacy migration, balanced ticks, achievements, daily vows, memory upgrades, death rewards, and rebirth.');
