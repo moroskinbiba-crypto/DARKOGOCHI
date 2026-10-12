@@ -828,8 +828,8 @@
             calculateOffline();
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
-            gameLoopId = setInterval(gameLoop, TICK_RATE);
-            setInterval(saveGame, 15000);
+            gameLoopId = state.isDead ? null : setInterval(gameLoop, TICK_RATE);
+            if (!state.isDead) setInterval(saveGame, 15000);
             showLog("Призыв Травмагочи завершен.");
             if (state.isDead) {
                 document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
