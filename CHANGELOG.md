@@ -16,3 +16,11 @@
 ## Verification
 
 Run `node tests/validate.mjs` from the repository root. It compiles the inline game code and tests legacy migration, decay math, achievements, daily-vow rewards, memory upgrades, one-time death rewards, and reincarnation persistence.
+
+
+## Offline timing correction
+
+- Separated the last simulated game tick from the last autosave timestamp. Frequent autosaves no longer reset the offline simulation window.
+- Delayed live timers catch up elapsed minute ticks, with the same one-day cap as offline catch-up.
+- Migrated older saves that do not have a simulation timestamp, then immediately persisted offline progress to prevent re-awarding it after a quick reload.
+- Added a regression test simulating four minutes offline despite autosaves.
