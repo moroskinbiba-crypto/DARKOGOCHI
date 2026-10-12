@@ -78,6 +78,21 @@ assert.equal(val('state.isWorking'), false, 'loading an old save closes any inte
 assert.equal(val('state.memoryShards'), 0, 'old saves migrate with zero memory shards');
 assert.equal(val('state.lifetime.taps'), 0, 'old saves receive default lifetime counters');
 assert.equal(val('state.stage'), 1, 'legacy stage is preserved');
+assert.ok(html.includes('lastTick: Date.now()'), 'simulation clock is separate from autosave clock');
+assert.ok(html.includes('const diffSeconds = Math.max(0, (now - lastTick) / 1000);'), 'offline progress uses the simulation clock');
+
+const offlineSave = JSON.stringify({
+  life:100, satiation:100, spirit:100, darkness:50, souls:10,
+  candles:5, elixirs:2, ageDays:0, stage:1, petName:'Безымянный',
+  isDead:false, isWorking:false, lastSave:Date.now() - 4 * 60000
+});
+const offlineGame = createGame(offlineSave);
+const offlineRead = expr => vm.runInContext(expr, offlineGame.context);
+const offlineVal = expr => JSON.parse(offlineRead('JSON.stringify(' + expr + ')'));
+assert.equal(offlineVal('state.lifetime.minutesAlive'), 4, 'four elapsed minutes are simulated even with frequent autosaves');
+assert.ok(Math.abs(offlineVal('state.ageDays') - 0.02) < 1e-9, 'offline simulation advances age consistently');
+const persistedOffline = JSON.parse(offlineGame.storage.get('traumagochi_state'));
+assert.equal(persistedOffline.lifetime.minutesAlive, 4, 'offline progress is persisted immediately and cannot be replayed after reload');
 
 read('simulateOneMinute()');
 const decay = val('({sat:state.satiation, spirit:state.spirit, dark:state.darkness, age:state.ageDays})');
