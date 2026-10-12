@@ -1013,6 +1013,7 @@
             pointerPos = 0;
             pointerDir = 1;
             state.lifetime.resonanceAttempts += 1;
+            saveGame();
             updateUI();
             
             document.getElementById('miniGameModal').classList.add('active');
