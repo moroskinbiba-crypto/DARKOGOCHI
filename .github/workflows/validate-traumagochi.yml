@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/traumagochi-depth
+      - fix/offline-simulation-clock
   pull_request:
     branches:
       - main
