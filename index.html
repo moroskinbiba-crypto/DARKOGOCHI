@@ -482,6 +482,32 @@
         }
         .log-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* --- Chronicles, daily vow and reincarnation --- */
+        .chronicle-content{width:100%;max-width:390px;max-height:51vh;overflow-y:auto;text-align:left;margin:8px 0 16px;padding-right:5px;scrollbar-width:thin;scrollbar-color:var(--gold-dim) transparent}
+        .chronicle-section{padding:13px;margin-bottom:10px;background:rgba(28,20,38,.5);border:1px solid rgba(212,175,55,.16);border-radius:9px}
+        .chronicle-heading{font-family:'Cinzel',serif;color:var(--gold);font-size:.95rem;letter-spacing:.5px;margin-bottom:8px}
+        .chronicle-copy{font-size:.9rem;line-height:1.35;color:var(--text-dim)}
+        .chronicle-progress{height:7px;background:#08070a;border:1px solid rgba(212,175,55,.17);border-radius:5px;overflow:hidden;margin:9px 0 5px}
+        .chronicle-progress>div{height:100%;background:linear-gradient(90deg,var(--crimson),var(--gold));transition:width .25s ease}
+        .chronicle-meta{font-size:.78rem;color:var(--text-dim);display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+        .chronicle-row{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-top:1px solid rgba(212,175,55,.1)}
+        .chronicle-row:first-of-type{border-top:0}
+        .chronicle-icon{font-size:1.25rem;width:28px;flex-shrink:0;text-align:center}
+        .chronicle-row-main{flex:1;min-width:0}
+        .chronicle-row-title{font-family:'Cinzel',serif;font-size:.8rem;color:var(--text-main);font-weight:700}
+        .chronicle-row-desc{font-size:.78rem;color:var(--text-dim);line-height:1.3;margin-top:2px}
+        .chronicle-row.locked{opacity:.48}
+        .chronicle-row.earned .chronicle-row-title{color:var(--gold)}
+        .chronicle-action{background:transparent;border:1px solid var(--gold-dim);border-radius:5px;padding:7px 9px;color:var(--gold);font-family:'Cinzel',serif;font-weight:700;font-size:.73rem;cursor:pointer;white-space:nowrap}
+        .chronicle-action:disabled{opacity:.25;cursor:not-allowed}
+        .memory-balance{font-family:'Cinzel',serif;color:var(--gold);font-size:.9rem;margin-bottom:8px}
+        .evo-overlay{position:absolute;left:12px;right:12px;bottom:5px;pointer-events:none;text-align:center;text-shadow:0 2px 8px #000}
+        .evo-caption{font-size:.67rem;letter-spacing:.6px;color:var(--gold);opacity:.9;margin-bottom:4px}
+        .evo-track{height:5px;width:min(250px,75%);margin:auto;background:rgba(0,0,0,.8);border:1px solid rgba(212,175,55,.25);border-radius:5px;overflow:hidden}
+        .evo-fill{height:100%;width:0;background:linear-gradient(90deg,var(--crimson),var(--gold));transition:width .4s ease}
+        .pet-mood{font-size:.68rem;color:var(--text-dim);text-align:center;margin-top:2px}
+        @media(max-height:740px){.header{padding-top:8px;padding-bottom:5px}.runes{font-size:.52rem;margin:2px 0}.meta-info{margin-top:1px}.rules-trigger-btn{margin-top:3px;padding:3px 10px}.resources{padding:7px 12px}.stats-panel{padding:8px 18px}.stat-row{margin-bottom:7px}.actions{gap:7px;padding-top:8px}.btn{padding:8px 5px}}
+        
         /* Animations */
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         @keyframes breathe { 0%, 100% { transform: scale(1) translateY(0px); } 50% { transform: scale(1.04) translateY(3px); } }
@@ -503,8 +529,10 @@
         </div>
         <div class="pet-name" id="pet-name">Безымянный</div>
         <div class="age-info">Возраст: <span id="age">0</span> дней</div>
+        <div class="pet-mood" id="pet-mood">Душа спокойна и прислушивается</div>
         <div>
             <button class="rules-trigger-btn" onclick="openRules()">📜 Свод Правил</button>
+            <button class="rules-trigger-btn" onclick="openChronicles()">🕯️ Хроники</button>
         </div>
         <div class="runes" style="transform: scaleX(-1); margin-top: 4px;">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ  ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
     </div>
@@ -529,6 +557,10 @@
                     <ellipse class="eye" cx="120" cy="90" rx="7" ry="12"/>
                 </g>
             </svg>
+        </div>
+        <div class="evo-overlay">
+            <div class="evo-caption" id="evo-next">Следующая форма: день 3 · тьма 40</div>
+            <div class="evo-track"><div class="evo-fill" id="evo-progress"></div></div>
         </div>
     </div>
 
@@ -603,9 +635,9 @@
                 <div class="rules-subtitle">2. Жизненные Атрибуты</div>
                 <ul>
                     <li><strong>Жизнь:</strong> Падает, если существо голодает, теряет дух или когда Тьма становится слишком давящей.</li>
-                    <li><strong>Насыщение:</strong> Падает автономно (-0.4 каждую минуту). Полной шкалы хватает примерно на 4 часа. При 0 начинает отнимать Жизнь.</li>
-                    <li><strong>Дух:</strong> Угасает со временем (-0.2 каждую минуту). Запас прочности составляет около 8 часов. При 0 наносит критический урон Жизни.</li>
-                    <li><strong>Тьма:</strong> Стабильно растет (+0.1 каждую минуту). Если превысит 75%, начинает плавно душить существо (-0.5 Жизни за тик). Однако высокая Тьма необходима для эволюции.</li>
+                    <li><strong>Насыщение:</strong> Падает автономно (-0.25 в минуту). При 0 медленно отнимает Жизнь; кормление восстанавливает 50 единиц и снижает Тьму.</li>
+                    <li><strong>Дух:</strong> Угасает со временем (-0.12 в минуту). При 0 начинает отнимать Жизнь; касания и ритуалы помогают его восстановить.</li>
+                    <li><strong>Тьма:</strong> Растёт на 0.06 в минуту. После 90% начинает медленно ранить сущность; высокая Тьма необходима для эволюции. Печать тьмы из Хроник сдвигает опасный порог до 95%.</li>
                 </ul>
             </div>
             <div class="rules-section">
@@ -672,6 +704,14 @@
         <button class="close-btn" onclick="closeShop()">Закрыть врата</button>
     </div>
 
+    <!-- --- Modal: Chronicles --- -->
+    <div class="modal-overlay" id="chroniclesModal">
+        <div class="modal-title" style="color:var(--gold)">ХРОНИКИ БЕЗДНЫ</div>
+        <div class="modal-text">Клятва дня, достижения и память прошлых жизней</div>
+        <div class="chronicle-content" id="chronicleContent"></div>
+        <button class="close-btn" onclick="closeChronicles()">Закрыть хроники</button>
+    </div>
+
     <!-- --- Modal: Mini-Game --- -->
     <div class="modal-overlay" id="miniGameModal">
         <div class="modal-title" style="color: var(--gold);">РЕЗОНАНС БЕЗДНЫ</div>
@@ -688,7 +728,7 @@
     <!-- --- Modal: Game Over --- -->
     <div class="modal-overlay" id="gameOverModal">
         <div class="modal-title">ANIMA PERIT</div>
-        <div class="modal-text">Душа рассеялась во тьме.<br>Она просуществовала <span id="final-days" style="color:var(--gold); font-weight:bold;">0</span> дней.</div>
+        <div class="modal-text">Душа рассеялась во тьме.<br>Она просуществовала <span id="final-days" style="color:var(--gold); font-weight:bold;">0</span> дней.<br><span style="color:var(--gold);font-size:.9rem">Память вернула осколки: <b id="memory-earned">0</b> 💠</span><br><span style="font-size:.8rem">Возродись, чтобы потратить их на вечные улучшения.</span></div>
         <button class="btn" onclick="resetGame()" style="width: 200px; border-color: var(--crimson); color: var(--crimson); margin-top: 10px;">
             <span>✦ Возрождение</span>
         </button>
@@ -729,8 +769,37 @@
         let state = {
             life: 100, satiation: 100, spirit: 100, darkness: 50,
             souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
-            petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now()
+            petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(),
+            memoryShards: 0, memoryUpgrades: {}, achievements: {},
+            lifetime: {taps:0,feedings:0,rituals:0,darknessActions:0,healings:0,resonanceWins:0,resonanceAttempts:0,evolutions:0,minutesAlive:0,reincarnations:0},
+            dailyVow: {key:"",index:0,progress:0,claimed:false}, deathRewarded:false
         };
+
+        const DAILY_VOWS = [
+            {id:"touch",title:"Согреть тьму",desc:"Коснись питомца 12 раз.",type:"taps",target:12,reward:{souls:2,candles:1},icon:"🖤"},
+            {id:"feed",title:"Кровавый пир",desc:"Покорми питомца 2 раза.",type:"feedings",target:2,reward:{souls:3},icon:"🍖"},
+            {id:"ritual",title:"Три шепота",desc:"Проведи 3 ритуала.",type:"rituals",target:3,reward:{souls:2,candles:2},icon:"🕯️"},
+            {id:"resonance",title:"Поймать волну",desc:"Успешно поймай резонанс 1 раз.",type:"resonanceWins",target:1,reward:{candles:4},icon:"〰️"},
+            {id:"survive",title:"Не отступать",desc:"Переживи 6 минутных циклов.",type:"minutesAlive",target:6,reward:{souls:2,elixirs:1},icon:"⏳"}
+        ];
+        const MEMORY_UPGRADES = [
+            {id:"warmSoul",title:"Тёплая искра",icon:"🔥",cost:2,desc:"Насыщение убывает на 15% медленнее."},
+            {id:"steadyMind",title:"Непокорная воля",icon:"🧠",cost:3,desc:"Дух угасает на 15% медленнее."},
+            {id:"bloodVeil",title:"Кровавый покров",icon:"🩸",cost:4,desc:"Урон жизни от истощения снижен на 25%."},
+            {id:"elderMemory",title:"Память старейшин",icon:"👁️",cost:5,desc:"Шанс добыть душу в ритуале выше на 10%."},
+            {id:"darkSeal",title:"Печать тьмы",icon:"🌑",cost:6,desc:"Тьма начинает ранить только после 95."}
+        ];
+        const ACHIEVEMENTS = [
+            {id:"firstTouch",title:"Первое прикосновение",desc:"Коснись сущности впервые.",icon:"👆",test:()=>state.lifetime.taps>=1,reward:{souls:2}},
+            {id:"bonded",title:"Нежность во тьме",desc:"Коснись питомца 100 раз за все жизни.",icon:"🖤",test:()=>state.lifetime.taps>=100,reward:{souls:4}},
+            {id:"firstRitual",title:"Первый шёпот",desc:"Проведи первый ритуал.",icon:"🕯️",test:()=>state.lifetime.rituals>=1,reward:{candles:2}},
+            {id:"ritualKeeper",title:"Хранитель круга",desc:"Проведи 10 ритуалов за все жизни.",icon:"⭕",test:()=>state.lifetime.rituals>=10,reward:{souls:3,candles:2}},
+            {id:"resonance",title:"Пойманная частота",desc:"Трижды успешно поймай резонанс.",icon:"〰️",test:()=>state.lifetime.resonanceWins>=3,reward:{candles:3}},
+            {id:"firstEvolution",title:"Пробуждение",desc:"Увидь первую эволюцию.",icon:"👁️",test:()=>state.lifetime.evolutions>=1,reward:{souls:3}},
+            {id:"masterForm",title:"Повелитель Бездны",desc:"Достигни четвёртой формы.",icon:"🌌",test:()=>state.stage>=4,reward:{elixirs:2}},
+            {id:"longLife",title:"Нить не оборвалась",desc:"Проживи 1000 минутных циклов за все жизни.",icon:"⌛",test:()=>state.lifetime.minutesAlive>=1000,reward:{souls:5}},
+            {id:"reborn",title:"Смерть — не конец",desc:"Возродись после первой гибели.",icon:"♻️",test:()=>state.lifetime.reincarnations>=1,reward:{candles:3}}
+        ];
 
         let gameLoopId = null;
         let miniGameInterval = null;
@@ -748,26 +817,54 @@
 
         function init() {
             loadGame();
+            normalizeMeta();
+            if (state.isDead && !state.deathRewarded) {
+                const inheritedReward = Math.max(1, Math.floor(state.ageDays / 3) + state.stage);
+                state.memoryShards += inheritedReward;
+                state.lastMemoryReward = inheritedReward;
+                state.deathRewarded = true;
+                saveGame();
+            }
             calculateOffline();
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
-            gameLoopId = setInterval(gameLoop, TICK_RATE);
+            gameLoopId = state.isDead ? null : setInterval(gameLoop, TICK_RATE);
+            if (!state.isDead) setInterval(saveGame, 15000);
             showLog("Призыв Травмагочи завершен.");
+            if (state.isDead) {
+                document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
+                document.getElementById('memory-earned').innerText = state.lastMemoryReward || 0;
+                document.getElementById('gameOverModal').classList.add('active');
+            }
+        }
+
+        function simulateOneMinute() {
+            if (state.isDead) return;
+            normalizeMeta();
+            state.satiation = Math.max(0, state.satiation - 0.25 * (state.memoryUpgrades.warmSoul ? 0.85 : 1));
+            state.spirit = Math.max(0, state.spirit - 0.12 * (state.memoryUpgrades.steadyMind ? 0.85 : 1));
+            state.darkness = Math.min(MAX_STAT, state.darkness + 0.06);
+
+            const starved = state.satiation <= 0;
+            const spiritless = state.spirit <= 0;
+            if (starved || spiritless) {
+                const baseDrain = starved && spiritless ? 0.5 : 0.3;
+                state.life = Math.max(0, state.life - baseDrain * (state.memoryUpgrades.bloodVeil ? 0.75 : 1));
+            }
+            const darkThreshold = state.memoryUpgrades.darkSeal ? 95 : 90;
+            if (state.darkness > darkThreshold) state.life = Math.max(0, state.life - 0.15);
+
+            state.ageDays += 0.005;
+            state.lifetime.minutesAlive += 1;
+            recordDailyProgress("minutesAlive");
+            checkEvolution();
+            checkAchievements();
+            checkDeath();
         }
 
         function gameLoop() {
             if (state.isDead) return;
-
-            state.satiation = Math.max(0, state.satiation - 0.4); 
-            state.spirit = Math.max(0, state.spirit - 0.2);      
-            state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
-            
-            if (state.darkness > 75) state.life = Math.max(0, state.life - 0.5);
-            if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 1);
-
-            state.ageDays += 0.005; 
-            checkEvolution();
-            checkDeath();
+            simulateOneMinute();
             saveGame();
             updateUI();
         }
@@ -786,8 +883,12 @@
             pet.classList.add(animClasses[randIdx]);
             
             state.spirit = Math.min(MAX_STAT, state.spirit + 0.5); // Микро-бонус за клик
+            state.lifetime.taps += 1;
+            recordDailyProgress('taps');
+            checkAchievements();
             showLog(tapPhrases[randIdx]);
             safeHaptic('impact', 'light');
+            saveGame();
             updateUI();
         }
 
@@ -798,9 +899,11 @@
             if (state.ageDays >= 14 && state.darkness > 85) newStage = 4;
 
             if (newStage > state.stage) {
+                state.lifetime.evolutions += newStage - state.stage;
                 state.stage = newStage;
                 showLog(`Эволюция: Ментальная форма изменена!`);
                 safeHaptic('notification', 'success');
+                checkAchievements();
             }
         }
 
@@ -809,10 +912,18 @@
                 state.isDead = true;
                 state.life = 0;
                 state.isWorking = false;
+                if (!state.deathRewarded) {
+                    const memoryReward = Math.max(1, Math.floor(state.ageDays / 3) + state.stage);
+                    state.memoryShards = Math.max(0, Number(state.memoryShards) || 0) + memoryReward;
+                    state.lastMemoryReward = memoryReward;
+                    state.deathRewarded = true;
+                }
+                saveGame();
                 if (gameLoopId) clearInterval(gameLoopId);
                 if (miniGameInterval) clearInterval(miniGameInterval);
                 updateUI();
                 document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
+                document.getElementById('memory-earned').innerText = state.lastMemoryReward || 0;
                 document.getElementById('gameOverModal').classList.add('active');
                 document.getElementById('miniGameModal').classList.remove('active');
                 safeHaptic('notification', 'error');
@@ -825,11 +936,15 @@
             if (state.souls < 2) { showLog("Недостаточно душ! (Нужно 2 💀)"); safeHaptic('notification', 'error'); return; }
             
             state.souls -= 2;
+            state.lifetime.feedings += 1;
+            recordDailyProgress('feedings');
             state.satiation = Math.min(MAX_STAT, state.satiation + 50); // Изменено с 35 на 50
             state.life = Math.min(MAX_STAT, state.life + 10);          // Изменено с 5 на 10
             state.darkness = Math.max(0, state.darkness - 5);
+            checkAchievements();
             showLog("Плоть поглощена. Анима восстанавливается.");
             safeHaptic('impact', 'light');
+            saveGame();
             updateUI();
         }
 
@@ -839,11 +954,14 @@
             if (state.satiation < 5) { showLog("Питомец слишком истощен."); return; }
 
             state.candles -= 1;
+            state.lifetime.rituals += 1;
+            recordDailyProgress('rituals');
             state.satiation = Math.max(0, state.satiation - 5);    // Снижено с 10 на 5
             state.spirit = Math.min(MAX_STAT, state.spirit + 25);  // Увеличено с 20 на 25
             state.darkness = Math.min(MAX_STAT, state.darkness + 10);
             
-            if (Math.random() < (state.darkness > 60 ? 0.5 : 0.25)) {
+            const memoryBonus = state.memoryUpgrades.elderMemory ? 0.1 : 0;
+            if (Math.random() < Math.min(0.85, (state.darkness > 60 ? 0.5 : 0.25) + memoryBonus)) {
                 state.souls += 1;
                 showLog("Ритуал удался! Уловлена чистая душа.");
                 safeHaptic('impact', 'heavy');
@@ -851,6 +969,8 @@
                 showLog("Тьма рассеяла ментальный зов...");
                 safeHaptic('impact', 'medium');
             }
+            checkAchievements();
+            saveGame();
             updateUI();
         }
 
@@ -859,10 +979,12 @@
             if (state.candles < 1) { showLog("Нужна 1 🕯️ для ухода в себя."); safeHaptic('notification', 'error'); return; }
             
             state.candles -= 1;
+            state.lifetime.darknessActions += 1;
             state.spirit = Math.min(MAX_STAT, state.spirit + 30);
             state.darkness = Math.min(MAX_STAT, state.darkness + 15);
             showLog("Дух окреп, но психоз сгущается.");
             safeHaptic('impact', 'medium');
+            saveGame();
             updateUI();
         }
 
@@ -872,10 +994,13 @@
             if (state.life >= MAX_STAT) { showLog("Сущность абсолютно стабильна."); return; }
             
             state.elixirs -= 1;
+            state.lifetime.healings += 1;
             state.life = Math.min(MAX_STAT, state.life + 40);
             state.darkness = Math.max(0, state.darkness - 10);
             showLog("Эликсир стабилизировал Жизнь.");
             safeHaptic('impact', 'heavy');
+            checkAchievements();
+            saveGame();
             updateUI();
         }
 
@@ -884,15 +1009,18 @@
             if (state.isDead || state.isWorking) return;
             
             state.isWorking = true;
+            if (miniGameInterval) clearInterval(miniGameInterval);
             pointerPos = 0;
             pointerDir = 1;
+            state.lifetime.resonanceAttempts += 1;
+            saveGame();
             updateUI();
             
             document.getElementById('miniGameModal').classList.add('active');
             safeHaptic('impact', 'light');
 
             miniGameInterval = setInterval(() => {
-                pointerPos += pointerDir * 2.5; 
+                pointerPos += pointerDir * 1.25; 
                 if (pointerPos >= 100) { pointerPos = 100; pointerDir = -1; }
                 if (pointerPos <= 0) { pointerPos = 0; pointerDir = 1; }
                 document.getElementById('mg-pointer').style.left = pointerPos + '%';
@@ -909,6 +1037,8 @@
 
             if (pointerPos >= 40 && pointerPos <= 60) {
                 state.candles += 4;
+                state.lifetime.resonanceWins += 1;
+                recordDailyProgress('resonanceWins');
                 if (Math.random() < 0.5) {
                     state.souls += 1;
                     showLog(`Резонанс (${roundedPos}%)! +4 🕯️ и +1 💀`);
@@ -923,6 +1053,7 @@
                 safeHaptic('notification', 'warning');
             }
 
+            checkAchievements();
             saveGame();
             updateUI();
         }
@@ -942,6 +1073,7 @@
             const names = { 'candles': 'Свечи', 'elixirs': 'Эликсир' };
             showLog(`Приобретено: ${amount} ${names[resource]}`);
             safeHaptic('notification', 'success');
+            saveGame();
             updateUI();
         }
 
@@ -956,6 +1088,7 @@
                 state.souls -= 3;
                 state.petName = newName.trim().substring(0, 15);
                 showLog(`Новое имя: ${state.petName}`);
+                saveGame();
                 inputField.value = ""; 
                 safeHaptic('notification', 'success');
                 closeShop();
@@ -967,16 +1100,27 @@
         }
 
         function resetGame() {
+            const preserved = {
+                memoryShards: Math.max(0, Number(state.memoryShards) || 0),
+                memoryUpgrades: {...(state.memoryUpgrades || {})},
+                achievements: {...(state.achievements || {})},
+                lifetime: {...(state.lifetime || {}), reincarnations: ((state.lifetime || {}).reincarnations || 0) + 1},
+                dailyVow: {...(state.dailyVow || {})}
+            };
             state = {
                 life: 100, satiation: 100, spirit: 100, darkness: 50,
                 souls: 10, candles: 5, elixirs: 2, ageDays: 0, stage: 1,
-                petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now()
+                petName: "Безымянный", isDead: false, isWorking: false, lastSave: Date.now(),
+                ...preserved, deathRewarded:false, lastMemoryReward:0
             };
+            normalizeMeta();
+            checkAchievements();
             document.getElementById('gameOverModal').classList.remove('active');
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = setInterval(gameLoop, TICK_RATE);
             saveGame();
             updateUI();
+            closeChronicles();
             showLog("Новая израненная душа призвана.");
         }
 
@@ -997,11 +1141,34 @@
             const times = ["Рассвет 00:00", "Утро 06:00", "Полдень 12:00", "Закат 18:00", "Ночь 00:00"];
             const timeIdx = Math.floor(state.ageDays * 5) % 5;
             document.getElementById('time').innerText = times[timeIdx];
+            ensureDailyVow();
+            if (document.getElementById('chroniclesModal').classList.contains('active')) renderChronicles();
 
             const names = ["Личинка Ур. I", "Блуждающий Дух", "Теневой Фантом", "Повелитель Бездны"];
             document.getElementById('stage-name').innerText = names[state.stage - 1] || "Неизвестно";
 
             const pet = document.getElementById('pet');
+            const nextStage = state.stage >= 4 ? null : [{days:3,darkness:40},{days:7,darkness:65},{days:14,darkness:85}][state.stage-1];
+            const evoCaption = document.getElementById('evo-next');
+            const evoProgress = document.getElementById('evo-progress');
+            if (nextStage) {
+                const ageProgress = Math.min(1, state.ageDays / nextStage.days);
+                const darkProgress = Math.min(1, state.darkness / nextStage.darkness);
+                const progress = Math.floor(Math.min(ageProgress, darkProgress) * 100);
+                evoCaption.innerText = 'Следующая форма: день ' + nextStage.days + ' · тьма ' + nextStage.darkness;
+                evoProgress.style.width = progress + '%';
+            } else {
+                evoCaption.innerText = 'Форма Повелителя Бездны достигнута';
+                evoProgress.style.width = '100%';
+            }
+            const mood = document.getElementById('pet-mood');
+            if (state.isDead) mood.innerText = 'Эхо угасло…';
+            else if (state.life < 25) mood.innerText = 'Сущность на грани исчезновения';
+            else if (state.satiation < 25) mood.innerText = 'Питомец просит пищи';
+            else if (state.spirit < 25) mood.innerText = 'Духу нужно утешение';
+            else if (state.darkness > 90) mood.innerText = 'Тьма становится слишком густой';
+            else if (state.spirit > 80 && state.satiation > 70) mood.innerText = 'Душа спокойна и прислушивается';
+            else mood.innerText = 'Питомец ждёт твоего внимания';
             // Сохраняем анимационные классы при обновлении стадий
             const activeAnims = ['anim-glow', 'anim-shiver', 'anim-squish', 'anim-glitch', 'anim-flare'].filter(c => pet.classList.contains(c));
             
@@ -1046,6 +1213,150 @@
             logTimeout = setTimeout(() => log.classList.remove('show'), 2500);
         }
 
+        function normalizeMeta() {
+            if (!state || typeof state !== 'object') return;
+            state.memoryShards = Math.max(0, Number(state.memoryShards) || 0);
+            state.memoryUpgrades = {...(state.memoryUpgrades || {})};
+            state.achievements = {...(state.achievements || {})};
+            const defaults = {taps:0,feedings:0,rituals:0,darknessActions:0,healings:0,resonanceWins:0,resonanceAttempts:0,evolutions:0,minutesAlive:0,reincarnations:0};
+            state.lifetime = {...defaults,...(state.lifetime || {})};
+            Object.keys(defaults).forEach(k => { state.lifetime[k] = Math.max(0, Number(state.lifetime[k]) || 0); });
+            const statDefaults = {life:100,satiation:100,spirit:100,darkness:50};
+            Object.keys(statDefaults).forEach(k => {
+                const value = Number(state[k]);
+                state[k] = Math.max(0, Math.min(MAX_STAT, Number.isFinite(value) ? value : statDefaults[k]));
+            });
+            ['souls','candles','elixirs'].forEach(k => { state[k] = Math.max(0, Number(state[k]) || 0); });
+            state.ageDays = Math.max(0, Number(state.ageDays) || 0);
+            state.stage = Math.min(4, Math.max(1, Math.floor(Number(state.stage) || 1)));
+            state.petName = (typeof state.petName === 'string' ? state.petName : 'Безымянный').trim().slice(0,15) || 'Безымянный';
+            state.dailyVow = {...{key:"",index:0,progress:0,claimed:false},...(state.dailyVow || {})};
+            state.deathRewarded = !!state.deathRewarded;
+            if (!Number.isFinite(state.lastMemoryReward)) state.lastMemoryReward = 0;
+            ensureDailyVow();
+        }
+
+        function todayKey() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
+        function daySerial() {
+            const d = new Date();
+            return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+        }
+
+        function ensureDailyVow() {
+            if (!state.dailyVow || typeof state.dailyVow !== 'object') state.dailyVow = {key:"",index:0,progress:0,claimed:false};
+            const key = todayKey();
+            if (state.dailyVow.key !== key) {
+                state.dailyVow = {key,index:daySerial()%DAILY_VOWS.length,progress:0,claimed:false};
+            }
+            state.dailyVow.index = Math.min(DAILY_VOWS.length-1,Math.max(0,Number(state.dailyVow.index)||0));
+            state.dailyVow.progress = Math.max(0,Number(state.dailyVow.progress)||0);
+        }
+
+        function recordDailyProgress(type, amount=1) {
+            ensureDailyVow();
+            const vow = DAILY_VOWS[state.dailyVow.index];
+            if (!state.dailyVow.claimed && vow && vow.type === type) {
+                state.dailyVow.progress = Math.min(vow.target,state.dailyVow.progress + amount);
+            }
+        }
+
+        function checkAchievements() {
+            normalizeMeta();
+            let changed = false;
+            ACHIEVEMENTS.forEach(a => {
+                if (state.achievements[a.id] || !a.test()) return;
+                state.achievements[a.id] = true;
+                Object.keys(a.reward || {}).forEach(resource => {
+                    state[resource] = Math.max(0,Number(state[resource])||0) + a.reward[resource];
+                });
+                changed = true;
+                showLog('Достижение: ' + a.title + ' · награда получена');
+                safeHaptic('notification','success');
+            });
+            if (changed && document.getElementById('chroniclesModal')?.classList.contains('active')) renderChronicles();
+        }
+
+        function claimDailyVow() {
+            if (state.isDead) return;
+            ensureDailyVow();
+            const vow = DAILY_VOWS[state.dailyVow.index];
+            if (!vow || state.dailyVow.claimed || state.dailyVow.progress < vow.target) {
+                showLog('Клятва ещё не исполнена.');
+                return;
+            }
+            Object.keys(vow.reward).forEach(resource => {
+                state[resource] = Math.max(0,Number(state[resource])||0) + vow.reward[resource];
+            });
+            state.dailyVow.claimed = true;
+            showLog('Клятва исполнена. Награда твоя.');
+            safeHaptic('notification','success');
+            saveGame();
+            updateUI();
+        }
+
+        function buyMemoryUpgrade(id) {
+            if (state.isDead) return;
+            normalizeMeta();
+            const upgrade = MEMORY_UPGRADES.find(x => x.id === id);
+            if (!upgrade || state.memoryUpgrades[id]) return;
+            if (state.memoryShards < upgrade.cost) {
+                showLog('Недостаточно осколков памяти.');
+                return;
+            }
+            state.memoryShards -= upgrade.cost;
+            state.memoryUpgrades[id] = true;
+            showLog('Память укрепилась: ' + upgrade.title);
+            safeHaptic('notification','success');
+            saveGame();
+            updateUI();
+        }
+
+        function openChronicles() {
+            normalizeMeta();
+            renderChronicles();
+            document.getElementById('chroniclesModal').classList.add('active');
+        }
+
+        function closeChronicles() {
+            document.getElementById('chroniclesModal').classList.remove('active');
+        }
+
+        function renderChronicles() {
+            const root = document.getElementById('chronicleContent');
+            if (!root) return;
+            normalizeMeta();
+            const vow = DAILY_VOWS[state.dailyVow.index];
+            const progress = vow ? Math.min(vow.target,state.dailyVow.progress) : 0;
+            const pct = vow ? Math.floor(progress / vow.target * 100) : 0;
+            const rewardText = vow ? Object.entries(vow.reward).map(([k,v]) => v + ' ' + ({souls:'💀',candles:'🕯️',elixirs:'⚗️'}[k] || k)).join(' + ') : '';
+            let html = '<div class="chronicle-section"><div class="chronicle-heading">🕯️ Клятва дня</div>';
+            html += '<div class="chronicle-row"><div class="chronicle-icon">' + (vow ? vow.icon : '🕯️') + '</div><div class="chronicle-row-main"><div class="chronicle-row-title">' + (vow ? vow.title : 'Безмолвие') + '</div><div class="chronicle-row-desc">' + (vow ? vow.desc : '') + '</div><div class="chronicle-progress"><div style="width:' + pct + '%"></div></div><div class="chronicle-meta"><span>' + progress + ' / ' + (vow ? vow.target : 0) + '</span><span>' + pct + '%</span></div><div class="chronicle-row-desc">Награда: ' + rewardText + '</div></div></div>';
+            html += '<button class="chronicle-action" ' + (!vow || state.dailyVow.claimed || progress < vow.target ? 'disabled' : '') + ' onclick="claimDailyVow()">' + (state.dailyVow.claimed ? 'Получено сегодня' : progress >= (vow ? vow.target : 1) ? 'Забрать награду' : 'Продолжить') + '</button></div>';
+
+            const unlocked = ACHIEVEMENTS.filter(a => state.achievements[a.id]).length;
+            html += '<div class="chronicle-section"><div class="chronicle-heading">🏆 Память подвигов · ' + unlocked + '/' + ACHIEVEMENTS.length + '</div>';
+            ACHIEVEMENTS.forEach(a => {
+                const earned = !!state.achievements[a.id];
+                const reward = Object.entries(a.reward || {}).map(([k,v]) => '+' + v + ' ' + ({souls:'💀',candles:'🕯️',elixirs:'⚗️'}[k] || k)).join(' ');
+                html += '<div class="chronicle-row ' + (earned ? 'earned' : 'locked') + '"><div class="chronicle-icon">' + (earned ? a.icon : '🔒') + '</div><div class="chronicle-row-main"><div class="chronicle-row-title">' + a.title + (earned ? ' ✓' : '') + '</div><div class="chronicle-row-desc">' + a.desc + '</div><div class="chronicle-row-desc">Награда: ' + reward + '</div></div></div>';
+            });
+            html += '</div>';
+
+            html += '<div class="chronicle-section"><div class="chronicle-heading">💠 Осколки памяти</div><div class="memory-balance">Баланс: ' + Math.floor(state.memoryShards) + ' 💠</div><div class="chronicle-copy">После гибели сущность оставляет осколки. Они переживают возрождение и навсегда улучшают следующие жизни.</div>';
+            MEMORY_UPGRADES.forEach(u => {
+                const owned = !!state.memoryUpgrades[u.id];
+                html += '<div class="chronicle-row ' + (owned ? 'earned' : '') + '"><div class="chronicle-icon">' + u.icon + '</div><div class="chronicle-row-main"><div class="chronicle-row-title">' + u.title + (owned ? ' ✓' : '') + '</div><div class="chronicle-row-desc">' + u.desc + '</div><div class="chronicle-row-desc">' + (owned ? 'Вечно активно' : 'Цена: ' + u.cost + ' 💠') + '</div></div><button class="chronicle-action" ' + (owned || state.memoryShards < u.cost || state.isDead ? 'disabled' : '') + ' onclick="buyMemoryUpgrade(\'' + u.id + '\')">' + (owned ? 'Куплено' : 'Улучшить') + '</button></div>';
+            });
+            html += '</div>';
+
+            html += '<div class="chronicle-section"><div class="chronicle-heading">📖 Следующая эволюция</div><div class="chronicle-copy">Кормление поддерживает насыщение и снижает тьму; ритуалы укрепляют дух, но сгущают тьму. Высокая тьма нужна для эволюции, однако после 90 она начинает медленно вредить жизни. Не забывай лечить питомца и ловить резонанс.</div><div class="chronicle-meta"><span>Всего касаний: ' + state.lifetime.taps + '</span><span>Возрождений: ' + state.lifetime.reincarnations + '</span></div></div>';
+            root.innerHTML = html;
+        }
+
         function saveGame() {
             state.lastSave = Date.now();
             try { localStorage.setItem('traumagochi_state', JSON.stringify(state)); } catch (e) {}
@@ -1061,27 +1372,18 @@
         function calculateOffline() {
             if (state.isDead) return;
             const now = Date.now();
-            const diffSeconds = (now - state.lastSave) / 1000;
-            
+            const diffSeconds = Math.max(0, (now - state.lastSave) / 1000);
             if (diffSeconds > 10) {
                 const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
-                if (ticks > 0) {
-                    const simulatedTicks = Math.min(ticks, 1440); 
-                    for (let i = 0; i < simulatedTicks; i++) {
-                        if (state.life <= 0) { state.isDead = true; break; }
-                        state.satiation = Math.max(0, state.satiation - 0.4);
-                        state.spirit = Math.max(0, state.spirit - 0.2);
-                        state.darkness = Math.min(MAX_STAT, state.darkness + 0.1);
-                        
-                        if (state.darkness > 75) state.life = Math.max(0, state.life - 0.5);
-                        if (state.satiation === 0 || state.spirit === 0) state.life = Math.max(0, state.life - 1);
-                        state.ageDays += 0.005;
-                    }
+                const simulatedTicks = Math.min(ticks, 1440);
+                for (let i = 0; i < simulatedTicks && !state.isDead; i++) simulateOneMinute();
+                if (ticks > 0 && !state.isDead) {
                     checkEvolution();
-                    checkDeath();
-                    if (!state.isDead) showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. вне симуляции.`);
+                    checkAchievements();
+                    showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. вне симуляции.`);
                 }
             }
+            state.lastSave = now;
         }
 
         init();
