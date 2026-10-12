@@ -826,6 +826,7 @@
                 saveGame();
             }
             calculateOffline();
+            saveGame();
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = state.isDead ? null : setInterval(gameLoop, TICK_RATE);
