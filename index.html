@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>TRAUMAGOCHI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -20,17 +20,26 @@
             --safe-bottom: env(safe-area-inset-bottom, 16px);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        html { background: #020204; }
+
         body {
             background-color: var(--bg-deep);
             background-image: radial-gradient(circle at 50% 0%, #1c142a 0%, var(--bg-deep) 75%);
             color: var(--text-main);
             font-family: 'Cormorant Garamond', serif;
+            height: 100vh;
             height: 100dvh;
+            width: min(100%, 560px);
+            margin-inline: auto;
+            position: relative;
+            isolation: isolate;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border-inline: 1px solid rgba(212, 175, 55, 0.12);
+            box-shadow: 0 0 80px rgba(67, 29, 63, 0.16);
         }
 
         /* --- Header --- */
@@ -88,6 +97,15 @@
             background: rgba(212, 175, 55, 0.1);
         }
 
+        button, input { touch-action: manipulation; }
+        button { min-height: 44px; }
+        :where(button, input, [role="button"], [tabindex]):focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+        }
+        button, .pet-container, .runes, .evo-overlay { user-select: none; }
+        input { user-select: text; }
+
         /* --- Main Stage (SVG Pet) --- */
         .stage {
             flex: 1;
@@ -95,12 +113,12 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            min-height: 180px;
+            min-height: clamp(112px, 24vh, 230px);
         }
 
         .pet-container {
-            width: clamp(150px, 45vw, 210px);
-            height: clamp(150px, 45vw, 210px);
+            width: clamp(132px, 40vw, 210px);
+            height: clamp(132px, 40vw, 210px);
             position: relative;
             transition: transform 0.3s ease, filter 0.3s ease;
             cursor: pointer;
@@ -141,7 +159,7 @@
         .pet-container.sleeping .wisp-svg { animation: breathe 4s ease-in-out infinite; filter: drop-shadow(0 0 5px rgba(40, 30, 60, 0.5)) brightness(0.35); }
         .pet-container.sleeping .eye { transform: scaleY(0.05); animation: none; fill: #443344; }
 
-        .pet-container.dead .wisp-svg { animation: none; filter: grayscale(1) brightness(0.2) drop-shadow(none); }
+        .pet-container.dead .wisp-svg { animation: none; filter: grayscale(1) brightness(0.2); }
         .pet-container.dead .eye { fill: #222; filter: none; transform: rotate(45deg) scaleY(1); animation: none; }
         .pet-container.dead .eye:last-child { transform: rotate(-45deg) scaleY(1); }
 
@@ -294,8 +312,8 @@
 
         /* --- Modals --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            position: absolute;
+            inset: 0;
             background: rgba(3, 3, 5, 0.97);
             backdrop-filter: blur(15px);
             z-index: 100;
@@ -303,7 +321,10 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: max(16px, env(safe-area-inset-top, 0px)) 18px max(16px, env(safe-area-inset-bottom, 0px));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             text-align: center;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -507,6 +528,8 @@
         .evo-fill{height:100%;width:0;background:linear-gradient(90deg,var(--crimson),var(--gold));transition:width .4s ease}
         .pet-mood{font-size:.68rem;color:var(--text-dim);text-align:center;margin-top:2px}
         @media(max-height:740px){.header{padding-top:8px;padding-bottom:5px}.runes{font-size:.52rem;margin:2px 0}.meta-info{margin-top:1px}.rules-trigger-btn{margin-top:3px;padding:3px 10px}.resources{padding:7px 12px}.stats-panel{padding:8px 18px}.stat-row{margin-bottom:7px}.actions{gap:7px;padding-top:8px}.btn{padding:8px 5px}}
+        @media(max-height:640px){.header{padding:4px 8px}.title{font-size:1.18rem;letter-spacing:3px}.pet-name{font-size:1rem}.age-info,.pet-mood{font-size:.65rem}.stage{min-height:100px}.pet-container{width:clamp(112px,30vw,150px);height:clamp(112px,30vw,150px)}.evo-caption{font-size:.58rem}.resources{padding:5px 10px}.stats-panel{padding:5px 12px}.stat-row{grid-template-columns:66px 1fr 30px;gap:7px;margin-bottom:4px}.stat-bar-bg{height:8px}.actions{gap:6px;padding:6px 10px calc(7px + var(--safe-bottom))}.btn{min-height:42px;padding:6px 4px;font-size:.82rem}.btn-cost{font-size:.68rem}}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
         
         /* Animations */
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
@@ -538,8 +561,8 @@
     </div>
 
     <div class="stage">
-        <div class="pet-container stage-1" id="pet" onclick="tapPet()">
-            <svg viewBox="0 0 200 200" class="wisp-svg">
+        <div class="pet-container stage-1" id="pet" role="button" tabindex="0" aria-label="Погладить питомца" onclick="tapPet()" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault();tapPet();}">
+            <svg viewBox="0 0 200 200" class="wisp-svg" aria-hidden="true" focusable="false">
                 <defs>
                     <radialGradient id="wispGrad" cx="50%" cy="40%" r="50%">
                         <stop offset="0%" stop-color="#564560"/>
@@ -573,22 +596,22 @@
     <div class="stats-panel">
         <div class="stat-row">
             <div class="stat-label">Жизнь</div>
-            <div class="stat-bar-bg"><div class="stat-bar-fill fill-life" id="bar-life"></div></div>
+            <div class="stat-bar-bg" aria-hidden="true"><div class="stat-bar-fill fill-life" id="bar-life"></div></div>
             <div class="stat-val" id="val-life">100</div>
         </div>
         <div class="stat-row">
             <div class="stat-label">Насыщ.</div>
-            <div class="stat-bar-bg"><div class="stat-bar-fill fill-satiation" id="bar-satiation"></div></div>
+            <div class="stat-bar-bg" aria-hidden="true"><div class="stat-bar-fill fill-satiation" id="bar-satiation"></div></div>
             <div class="stat-val" id="val-satiation">100</div>
         </div>
         <div class="stat-row">
             <div class="stat-label">Дух</div>
-            <div class="stat-bar-bg"><div class="stat-bar-fill fill-spirit" id="bar-spirit"></div></div>
+            <div class="stat-bar-bg" aria-hidden="true"><div class="stat-bar-fill fill-spirit" id="bar-spirit"></div></div>
             <div class="stat-val" id="val-spirit">100</div>
         </div>
         <div class="stat-row">
             <div class="stat-label">Тьма</div>
-            <div class="stat-bar-bg"><div class="stat-bar-fill fill-darkness" id="bar-darkness"></div></div>
+            <div class="stat-bar-bg" aria-hidden="true"><div class="stat-bar-fill fill-darkness" id="bar-darkness"></div></div>
             <div class="stat-val" id="val-darkness">50</div>
         </div>
     </div>
@@ -620,11 +643,11 @@
         </button>
     </div>
 
-    <div class="log-toast" id="log">Бездна шепчет...</div>
+    <div class="log-toast" id="log" role="status" aria-live="polite">Бездна шепчет...</div>
 
     <!-- --- Modal: Rules --- -->
-    <div class="modal-overlay" id="rulesModal">
-        <div class="modal-title">Свод Травмагочи</div>
+    <div class="modal-overlay" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+        <div class="modal-title" id="rules-title">Свод Травмагочи</div>
         <div class="modal-text">Изучите тайны поддержания искры во тьме</div>
         <div class="rules-content">
             <div class="rules-section">
@@ -670,8 +693,8 @@
     </div>
 
     <!-- --- Modal: Shop --- -->
-    <div class="modal-overlay" id="shopModal">
-        <div class="modal-title">Лавка Теней</div>
+    <div class="modal-overlay" id="shopModal" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+        <div class="modal-title" id="shop-title">Лавка Теней</div>
         <div class="modal-text">Обменяйте души на материальные блага</div>
         <div class="shop-grid">
             <div class="shop-item">
@@ -705,16 +728,16 @@
     </div>
 
     <!-- --- Modal: Chronicles --- -->
-    <div class="modal-overlay" id="chroniclesModal">
-        <div class="modal-title" style="color:var(--gold)">ХРОНИКИ БЕЗДНЫ</div>
+    <div class="modal-overlay" id="chroniclesModal" role="dialog" aria-modal="true" aria-labelledby="chronicles-title">
+        <div class="modal-title" id="chronicles-title" style="color:var(--gold)">ХРОНИКИ БЕЗДНЫ</div>
         <div class="modal-text">Клятва дня, достижения и память прошлых жизней</div>
         <div class="chronicle-content" id="chronicleContent"></div>
         <button class="close-btn" onclick="closeChronicles()">Закрыть хроники</button>
     </div>
 
     <!-- --- Modal: Mini-Game --- -->
-    <div class="modal-overlay" id="miniGameModal">
-        <div class="modal-title" style="color: var(--gold);">РЕЗОНАНС БЕЗДНЫ</div>
+    <div class="modal-overlay" id="miniGameModal" role="dialog" aria-modal="true" aria-labelledby="minigame-title">
+        <div class="modal-title" id="minigame-title" style="color: var(--gold);">РЕЗОНАНС БЕЗДНЫ</div>
         <div class="modal-text">Уловите частоту колебаний Бездны в багровом секторе</div>
         <div class="game-track">
             <div class="game-target"></div>
@@ -723,11 +746,12 @@
         <button class="btn" onclick="catchResonance()" style="width: 180px; margin-bottom: 20px; border-color: var(--gold);">
             <span>✦ УЛОВИТЬ ✦</span>
         </button>
+        <button class="close-btn" onclick="cancelMiniGame()" style="margin-top:8px">Отступить</button>
     </div>
 
     <!-- --- Modal: Game Over --- -->
-    <div class="modal-overlay" id="gameOverModal">
-        <div class="modal-title">ANIMA PERIT</div>
+    <div class="modal-overlay" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
+        <div class="modal-title" id="gameover-title">ANIMA PERIT</div>
         <div class="modal-text">Душа рассеялась во тьме.<br>Она просуществовала <span id="final-days" style="color:var(--gold); font-weight:bold;">0</span> дней.<br><span style="color:var(--gold);font-size:.9rem">Память вернула осколки: <b id="memory-earned">0</b> 💠</span><br><span style="font-size:.8rem">Возродись, чтобы потратить их на вечные улучшения.</span></div>
         <button class="btn" onclick="resetGame()" style="width: 200px; border-color: var(--crimson); color: var(--crimson); margin-top: 10px;">
             <span>✦ Возрождение</span>
@@ -803,6 +827,9 @@
 
         let gameLoopId = null;
         let miniGameInterval = null;
+        let autoSaveId = null;
+        let storageAvailable = true;
+        let loadWarning = '';
         let pointerPos = 0;
         let pointerDir = 1;
         const TICK_RATE = 60000; 
@@ -825,17 +852,27 @@
                 state.deathRewarded = true;
                 saveGame();
             }
-            calculateOffline();
+            const offlineSummary = calculateOffline();
             saveGame();
             updateUI();
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = state.isDead ? null : setInterval(gameLoop, TICK_RATE);
-            if (!state.isDead) setInterval(saveGame, 15000);
-            showLog("Призыв Травмагочи завершен.");
+            if (autoSaveId) clearInterval(autoSaveId);
+            autoSaveId = state.isDead ? null : setInterval(saveGame, 15000);
             if (state.isDead) {
                 document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
                 document.getElementById('memory-earned').innerText = state.lastMemoryReward || 0;
                 document.getElementById('gameOverModal').classList.add('active');
+            } else if (!storageAvailable) {
+                showLog('Браузер не сохраняет прогресс. Разреши локальные данные сайта.');
+            } else if (loadWarning) {
+                showLog(loadWarning);
+            } else if (offlineSummary && offlineSummary.minutes > 0) {
+                showLog(offlineSummary.capped
+                    ? 'Учтены последние ' + offlineSummary.minutes + ' мин. вне игры. Более раннее время не учитывается.'
+                    : 'Питомец прожил ещё ' + offlineSummary.minutes + ' мин. пока тебя не было.');
+            } else {
+                showLog('Призыв Травмагочи завершен.');
             }
         }
 
@@ -929,6 +966,9 @@
                 saveGame();
                 if (gameLoopId) clearInterval(gameLoopId);
                 if (miniGameInterval) clearInterval(miniGameInterval);
+                miniGameInterval = null;
+                if (autoSaveId) clearInterval(autoSaveId);
+                autoSaveId = null;
                 updateUI();
                 document.getElementById('final-days').innerText = state.ageDays.toFixed(1);
                 document.getElementById('memory-earned').innerText = state.lastMemoryReward || 0;
@@ -1038,6 +1078,7 @@
         function catchResonance() {
             if (!state.isWorking) return;
             clearInterval(miniGameInterval);
+            miniGameInterval = null;
             document.getElementById('miniGameModal').classList.remove('active');
             state.isWorking = false;
 
@@ -1126,6 +1167,8 @@
             document.getElementById('gameOverModal').classList.remove('active');
             if (gameLoopId) clearInterval(gameLoopId);
             gameLoopId = setInterval(gameLoop, TICK_RATE);
+            if (autoSaveId) clearInterval(autoSaveId);
+            autoSaveId = setInterval(saveGame, 15000);
             saveGame();
             updateUI();
             closeChronicles();
@@ -1335,6 +1378,32 @@
             document.getElementById('chroniclesModal').classList.remove('active');
         }
 
+        function cancelMiniGame() {
+            if (!state.isWorking) {
+                document.getElementById('miniGameModal').classList.remove('active');
+                return;
+            }
+            if (miniGameInterval) clearInterval(miniGameInterval);
+            miniGameInterval = null;
+            state.isWorking = false;
+            document.getElementById('miniGameModal').classList.remove('active');
+            saveGame();
+            updateUI();
+            showLog('Резонанс прерван. Награда не получена.');
+        }
+
+        function handleGlobalKeydown(event) {
+            if (!event || event.key !== 'Escape') return;
+            if (document.getElementById('miniGameModal').classList.contains('active')) return cancelMiniGame();
+            if (document.getElementById('chroniclesModal').classList.contains('active')) return closeChronicles();
+            if (document.getElementById('shopModal').classList.contains('active')) return closeShop();
+            if (document.getElementById('rulesModal').classList.contains('active')) return closeRules();
+        }
+
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('keydown', handleGlobalKeydown);
+        }
+
         function renderChronicles() {
             const root = document.getElementById('chronicleContent');
             if (!root) return;
@@ -1369,37 +1438,62 @@
 
         function saveGame() {
             state.lastSave = Date.now();
-            try { localStorage.setItem('traumagochi_state', JSON.stringify(state)); } catch (e) {}
+            const wasAvailable = storageAvailable;
+            try {
+                localStorage.setItem('traumagochi_state', JSON.stringify(state));
+                storageAvailable = true;
+            } catch (e) {
+                storageAvailable = false;
+                if (wasAvailable && document.getElementById('log')) {
+                    showLog('Не удалось сохранить прогресс. Проверь разрешения браузера.');
+                }
+            }
         }
 
         function loadGame() {
             try {
                 const saved = localStorage.getItem('traumagochi_state');
-                if (saved) {
-                    const data = JSON.parse(saved);
+                if (!saved) return;
+                let data;
+                try {
+                    data = JSON.parse(saved);
+                } catch (e) {
+                    loadWarning = 'Сохранение повреждено. Создана новая игра.';
+                }
+                if (data && typeof data === 'object' && !Array.isArray(data)) {
                     state = { ...state, ...data };
                     if (!Number.isFinite(Number(data.lastTick))) state.lastTick = Number(data.lastSave) || Date.now();
                     state.isWorking = false;
+                } else if (!loadWarning) {
+                    loadWarning = 'Сохранение повреждено. Создана новая игра.';
                 }
-            } catch (e) {}
+            } catch (e) {
+                storageAvailable = false;
+                loadWarning = 'Не удалось прочитать сохранение. Проверь разрешения браузера.';
+            }
         }
 
         function calculateOffline() {
-            if (state.isDead) return;
+            if (state.isDead) return null;
             const now = Date.now();
             const lastTick = Number.isFinite(Number(state.lastTick)) ? Number(state.lastTick) : (Number(state.lastSave) || now);
             const diffSeconds = Math.max(0, (now - lastTick) / 1000);
-            if (diffSeconds > 10) {
-                const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
-                const simulatedTicks = Math.min(ticks, 1440);
-                for (let i = 0; i < simulatedTicks && !state.isDead; i++) simulateOneMinute();
-                state.lastTick = ticks > simulatedTicks ? now : lastTick + simulatedTicks * TICK_RATE;
-                if (ticks > 0 && !state.isDead) {
-                    checkEvolution();
-                    checkAchievements();
-                    showLog(`Прошло ${Math.floor(diffSeconds/60)} мин. вне симуляции.`);
-                }
+            if (diffSeconds <= 10) return null;
+            const ticks = Math.floor(diffSeconds / (TICK_RATE / 1000));
+            if (ticks < 1) return null;
+            const simulatedTicks = Math.min(ticks, 1440);
+            let processedTicks = 0;
+            for (let i = 0; i < simulatedTicks && !state.isDead; i++) {
+                simulateOneMinute();
+                processedTicks++;
             }
+            state.lastTick = ticks > simulatedTicks ? now : lastTick + simulatedTicks * TICK_RATE;
+            if (processedTicks > 0 && !state.isDead) {
+                checkEvolution();
+                checkAchievements();
+                return { minutes: processedTicks, capped: ticks > simulatedTicks };
+            }
+            return null;
         }
 
         init();

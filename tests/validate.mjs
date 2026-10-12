@@ -75,10 +75,26 @@ const read = expr => vm.runInContext(expr, ctx);
 const val = expr => JSON.parse(read('JSON.stringify(' + expr + ')'));
 
 assert.equal(val('state.isWorking'), false, 'loading an old save closes any interrupted mini-game');
+
+const corrupted = createGame('{invalid-json');
+const corruptedRead = expr => vm.runInContext(expr, corrupted.context);
+const corruptedVal = expr => JSON.parse(corruptedRead('JSON.stringify(' + expr + ')'));
+assert.equal(corruptedVal('state.isDead'), false, 'corrupted saves fall back to a fresh living state');
+assert.ok(corrupted.storage.has('traumagochi_state'), 'fresh state replaces an unreadable save when storage is writable');
+assert.match(corrupted.elements.get('log').innerText, /Сохранение повреждено/, 'corrupted-save recovery is explained to the player');
 assert.equal(val('state.memoryShards'), 0, 'old saves migrate with zero memory shards');
 assert.equal(val('state.lifetime.taps'), 0, 'old saves receive default lifetime counters');
 assert.equal(val('state.stage'), 1, 'legacy stage is preserved');
 assert.ok(html.includes('lastTick: Date.now()'), 'simulation clock is separate from autosave clock');
+assert.ok(!/user-scalable=no|maximum-scale=1/.test(html), 'users can zoom the interface');
+assert.ok(html.includes('width: min(100%, 560px)'), 'game stays centered and readable on desktop');
+assert.ok(html.includes('@media(prefers-reduced-motion:reduce)'), 'reduced-motion preference is respected');
+assert.ok(html.includes('role="button" tabindex="0" aria-label="Погладить питомца"'), 'pet is keyboard-accessible');
+assert.ok(html.includes('aria-modal="true"'), 'dialogs expose accessible modal semantics');
+assert.ok(!html.includes('drop-shadow(none)'), 'dead-pet filter does not contain invalid CSS');
+assert.ok(html.includes('onclick="cancelMiniGame()"'), 'resonance can be cancelled without reloading');
+assert.ok(html.includes("event.key !== 'Escape'"), 'Escape key closes interruptible dialogs');
+assert.ok(html.includes('aria-live="polite"'), 'game notifications are announced to assistive technology');
 assert.ok(html.includes('const diffSeconds = Math.max(0, (now - lastTick) / 1000);'), 'offline progress uses the simulation clock');
 
 const offlineSave = JSON.stringify({
@@ -93,6 +109,7 @@ assert.equal(offlineVal('state.lifetime.minutesAlive'), 4, 'four elapsed minutes
 assert.ok(Math.abs(offlineVal('state.ageDays') - 0.02) < 1e-9, 'offline simulation advances age consistently');
 const persistedOffline = JSON.parse(offlineGame.storage.get('traumagochi_state'));
 assert.equal(persistedOffline.lifetime.minutesAlive, 4, 'offline progress is persisted immediately and cannot be replayed after reload');
+assert.match(offlineGame.elements.get('log').innerText, /ещё 4 мин/, 'offline catch-up produces an accurate visible summary');
 
 read('simulateOneMinute()');
 const decay = val('({sat:state.satiation, spirit:state.spirit, dark:state.darkness, age:state.ageDays})');
@@ -137,5 +154,6 @@ assert.ok(html.includes('id="chroniclesModal"'), 'Chronicles UI is present');
 assert.ok(html.includes('id="evo-progress"'), 'evolution progress UI is present');
 assert.ok(html.includes('id="memory-earned"'), 'game over exposes memory reward');
 assert.ok(html.includes('setInterval(saveGame, 15000)'), 'autosave is enabled for active lives');
+assert.ok(html.includes('Учтены последние '), 'offline cap is explained instead of reporting unprocessed time');
 
 console.log('TRAUMAGOCHI validation passed: syntax, legacy migration, balanced ticks, achievements, daily vows, memory upgrades, death rewards, and rebirth.');
